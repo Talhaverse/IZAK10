@@ -46,9 +46,9 @@ function Example() {
             layout.itemsCenter,
             gutters.marginTop_80,
         ]}>
-					<View style={[layout.relative, backgrounds.gray100, components.circle250]}/>
+					<View style={[layout.relative]}/>
 
-					<View style={[layout.absolute, gutters.paddingTop_80]}>
+					<View style={[layout.absolute, gutters.paddingTop_50]}>
 						<Brand height={300} width={300}/>
 					</View>
 				</View>
@@ -56,7 +56,7 @@ function Example() {
 				<View style={[gutters.paddingHorizontal_32, gutters.marginTop_40]}>
 					<View style={[gutters.marginTop_40]}>
 						<Text style={[fonts.size_40, fonts.gray800, fonts.bold]}>
-							{t('welcome:title')}
+							hello testing this shit 
 						</Text>
 						<Text style={[
             fonts.gray400,
@@ -64,10 +64,10 @@ function Example() {
             fonts.size_24,
             gutters.marginBottom_32,
         ]}>
-							{t('welcome:subtitle')}
+            testing shitty subtitle
 						</Text>
 						<Text style={[fonts.size_16, fonts.gray200, gutters.marginBottom_40]}>
-							{t('welcome:description')}
+                                shitty description
 						</Text>
 					</View>
 
