@@ -88,6 +88,8 @@ function Example() {
 						<TouchableOpacity testID="change-language-button" style={[components.buttonCircle, gutters.marginBottom_16]} onPress={() => onChangeLanguage(i18next.language === 'fr' ? 'en' : 'fr')}>
 							<ImageVariant source={TranslateImage} style={{ tintColor: colors.purple500 }}/>
 						</TouchableOpacity>
+
+                        
 					</View>
 				</View>
 			</ScrollView>
