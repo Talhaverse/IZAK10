@@ -5,7 +5,7 @@ import { useTheme } from '@/theme';
 import Attendance from '@/screens/Attendance';
 import Profile from '@/screens/Profile';
 import Customers from '@/screens/Customers';
-import Announcemnts from '@/screens/Announcemnts';
+import Announcements from '@/screens/Announcemnts';
 import Progress from '@/screens/Progress';
 import ReviewForm from '@/screens/ReviewForm';
 import DownloadReport from '@/screens/DownloadReport';
@@ -18,7 +18,7 @@ function ApplicationNavigator() {
 				<Stack.Screen name="Dashboard" component={Dashboard}/>
 				<Stack.Screen name="Attendance" component={Attendance}/>
 				<Stack.Screen name="Customers" component={Customers}/>
-				<Stack.Screen name="Announcements" component={Announcemnts}/>
+				<Stack.Screen name="Announcements" component={Announcements}/>
 				<Stack.Screen name="Progress" component={Progress}/>
 				<Stack.Screen name="ReviewForm" component={ReviewForm}/>
 				<Stack.Screen name="DownloadReport" component={DownloadReport}/>

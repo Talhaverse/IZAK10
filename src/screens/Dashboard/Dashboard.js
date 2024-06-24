@@ -67,7 +67,7 @@ function Dashboard() {
         height: 200,
         flexDirection: 'column',
         padding: 10,
-        backgroundColor: '#5A4FCF',
+        backgroundColor: '#0052e2',
         borderBottomLeftRadius: 40,
         borderBottomRightRadius: 40,
     },
