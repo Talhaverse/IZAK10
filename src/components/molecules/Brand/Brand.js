@@ -2,7 +2,6 @@ import { StyleSheet, View } from 'react-native';
 // import LogoLight from '@/theme/assets/images/tom_light.png';
 import LogoDark from '@/theme/assets/images/tom_dark.png';
 import logo from '@/theme/assets/images/logo.png';
-// import izaklogo from '@/theme/assets/images/izaklogo.png';
 import { ImageVariant } from '@/components/atoms';
 import { useTheme } from '@/theme';
 import { isImageSourcePropType } from '@/types/guards/image';
