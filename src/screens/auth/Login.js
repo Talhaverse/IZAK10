@@ -32,7 +32,19 @@ const Login = ({route,navigation}) => {
 	const toggleShowPassword = () => { 
         setShowPassword(!showPassword); 
     }; 
+  // useEffect(() => {
+           
 
+  //             navigation.addListener('focus', () => {
+  //               if(user){
+  //                 navigation.navigate('Dashboard')
+  //              }
+        
+        
+  //              });
+
+
+  //     }, []);
 
     const login = async() => {
 

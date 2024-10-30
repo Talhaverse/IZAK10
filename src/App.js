@@ -1,7 +1,8 @@
-import { StyleSheet, Text, View,  PermissionsAndroid,Platform ,Button, Alert, SafeAreaView} from 'react-native'
+import { StyleSheet, Text, View,  PermissionsAndroid,Platform ,Button, Alert, SafeAreaView,Linking} from 'react-native'
 import React, {useEffect,useRef,useState } from 'react';
 import Geolocation from 'react-native-geolocation-service';
 import ReactNativeForegroundService from "@supersami/rn-foreground-service";
+import NetInfo from "@react-native-community/netinfo";
 import 'react-native-gesture-handler';
 import { ThemeProvider } from '@/theme';
 import ApplicationNavigator from './navigators/Application';
@@ -9,8 +10,13 @@ export const storage = new MMKV();
 import { fetchWrapper } from './components/helpers';
 import RNShake from 'react-native-shake';
 import { MMKV } from 'react-native-mmkv'
+import SystemSetting from 'react-native-system-setting'
+import {SheetProvider} from 'react-native-actions-sheet';
+import './sheet/SheetList';
 const App = () => {
   const watchIdRef = useRef(null);
+  const [locationEnabledVal, setLocationEntableVAl] = useState(true);
+  const [airEnabledVal, setAirEntableVal] = useState(false);
   const API_URL2 = process.env.API_URL
    const storage = new MMKV({
       id: `izak-10`,
@@ -21,14 +27,123 @@ const App = () => {
   if (Platform.OS === 'android') {
     // Use PermissionsAndroid here
   }
-  useEffect(() => {
-    callme()
+
+
+useEffect(() => {
+    const locationListener = SystemSetting.addLocationListener(
+      (locationEnabled) => {
+          
+          setLocationEntableVAl(locationEnabled)
+          
+      },
+    );
+
+    return () => SystemSetting.removeListener(locationListener);
   }, []);
+
+useEffect(() => {
+    const airPlaneListener = SystemSetting.addAirplaneListener(
+      (airEnable) => {
+          console.log(airEnable)
+          setAirEntableVal(airEnable)
+          
+      },
+    );
+
+    return () => SystemSetting.removeListener(airPlaneListener);
+  }, []);
+
+  useEffect(() => {
+
+    
+    callme();
+
+       const subscription = RNShake.addListener(() => {
+       
+          sendSos(location);
+        
+        
+       
+        
+        
+        
+      })
+
+      return () => {
+       //console.log("ddd0000")
+        // Your code here...
+        subscription.remove()
+      }
+
+      return () => {
+           Geolocation.clearWatch(watchId);
+      };
+
+  }, []);
+
+ 
+const sendSos = async(location) => {
+
+
+  GetLocation.getCurrentPosition({
+          enableHighAccuracy: true,
+          timeout: 60000,
+          rationale: {
+            title: 'Location permission',
+            message: 'The app needs the permission to request your location.',
+            buttonPositive: 'Ok',
+          },
+        })
+        .then(async location => {
+            
+
+          const locationData  = {latitude:location.latitude,longitude:location.longitude}
+            
+            
+
+            setLoading(true)
+        
+            const url = `${API_URL2}/user/sos`;
+                 const token = ""
+                 const postData = {
+                    user_id:user.id,
+                    location:locationData
+                 }
+         
+
+             const listData = await fetchWrapper.post(url,token,postData);
+             setLoading(false)
+
+            
+              
+        })
+        .catch(error => {
+             
+            Linking.openSettings();
+            const { code, message } = error;
+           
+            console.log(code, message);
+        })
+
+ 
+  }
+  const getTrackingTime = async () => {
+    const url = `${API_URL2}/user/setting`;
+  
+      const token = {}
+      const data = await fetchWrapper.get(url,token);
+      
+      return data;
+  }
   const callme = async () => {
+   
+    const trackingTime = await getTrackingTime();
+    
+  
     await requestLocationPermission()
-    updateforeground();
-    Notification()
-    startTracking();
+    updateforeground(trackingTime.tracking);
+    Notification(trackingTime.tracking)
+    startTracking(trackingTime.tracking);
   }
   const requestLocationPermission = async () => {
     Geolocation.requestAuthorization('always')
@@ -47,6 +162,7 @@ const App = () => {
       if (granted === PermissionsAndroid.RESULTS.GRANTED) {
         console.log('1Location permission granted');
       } else {
+        Linking.openSettings();
         console.log('Location permission denied');
       }
       PermissionsAndroid.request(
@@ -62,18 +178,19 @@ const App = () => {
         },
       ); 
     } catch (err) {
-      console.warn(err);
+      //Linking.openSettings();
+      console.log(err);
     }
   }
-  const updateforeground =()=>{
-    ReactNativeForegroundService.add_task(() => startTracking(), {
-      delay: 900000,
+  const updateforeground =(trackingTime)=>{
+    ReactNativeForegroundService.add_task(() => startTracking(trackingTime), {
+      delay: trackingTime,
       onLoop: true,
       taskId: "taskid",
       onError: (e) => console.log(`Error logging:`, e),
     });
   }
-  const Notification =()=>{
+  const Notification =(trackingTime)=>{
 
     ReactNativeForegroundService.start({
       id: 1244,
@@ -88,12 +205,12 @@ const App = () => {
       setOnlyAlertOnce: true,
       color: '#000000',
     });
-    startTracking()
+    startTracking(trackingTime)
   }
 
-  const startTracking = async () => {
+  const startTracking = async (trackingTime) => {
   // let s= Geolocation.requestAuthorization('always');
-    console.log("here .....")
+    
     Geolocation.getCurrentPosition(
       position => {
         let coordinates: any = [];
@@ -101,20 +218,21 @@ const App = () => {
         coordinates[1] = position.coords.latitude;
 
         let userA  = storage.getString('user') ? JSON.parse(storage.getString('user')) : [];
-        console.log(userA?.id)
+       
         if(userA?.id){
             const locVal = {latitude:position.coords.latitude,longitude:position.coords.longitude}
             sendLoaction(locVal,userA.id);
         }
-        console.warn(Platform.OS,"App Position tracking",coordinates)
+        console.log(Platform.OS,"App Position tracking",coordinates)
       },
       error => {
+        Linking.openSettings();
         console.log('maperror in getting location', error.code, error.message);
 
       },
 
       
-      { maximumAge:60000,enableHighAccuracy: true, distanceFilter: 0,interval:900000,forceLocationManager: true },
+      { maximumAge:60000,enableHighAccuracy: true, distanceFilter: 0,interval:trackingTime,forceLocationManager: true },
     );
   };
   const sendLoaction = async (location,user_id) => {
@@ -127,8 +245,7 @@ const App = () => {
               event_id:0,
              }
             
-              console.log(user_id)
-              console.log(postData)
+              
               const listData = await fetchWrapper.post(url,token,postData);
             
                
@@ -137,14 +254,27 @@ const App = () => {
   
   return (
 
-
-
+    <>
+    {(locationEnabledVal && !airEnabledVal) ?
+    
     <ThemeProvider storage={storage}>
-
+         <SheetProvider>
         <ApplicationNavigator />
-        
+         </SheetProvider>
       </ThemeProvider>
+     
+      :
+       <View
+        style={{backgroundColor:'white',height:'100%',flex:1,justifyContent:'center'}}
+       >
 
+        <Text style={{color:'black',textAlign:'center',fontWeight:'bold'}}>Please enable you location and disable Airplane
+       
+        </Text>
+        </View>
+
+      }
+      </>
   )
 }
 export default App

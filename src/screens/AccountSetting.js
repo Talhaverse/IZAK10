@@ -15,7 +15,7 @@ const AccountSetting = ({navigation}) => {
     })
    let user  = storage.getString('user') ? JSON.parse(storage.getString('user')) : [];
   const logout = () => {
-
+        storage.delete('customer')
         GetLocation.getCurrentPosition({
           enableHighAccuracy: true,
           timeout: 60000,

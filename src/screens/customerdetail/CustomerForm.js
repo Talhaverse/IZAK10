@@ -7,6 +7,7 @@ import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import { fetchWrapper } from '../../components/helpers';
 import { MMKV } from 'react-native-mmkv'
 import GetLocation from 'react-native-get-location'
+import  moment from 'moment'
 // import axios  from 'axios';
 // import fs from 'fs';
 const CustomerForm = ({data,navigation,type,mode}) => {
@@ -115,7 +116,9 @@ const CustomerForm = ({data,navigation,type,mode}) => {
         timeout: 60000,
         })
         .then(location => {
-            return {latitude:location.latitude,longitude:location.longitude}
+          const dateStr = new Date();
+         
+            return {latitude:location.latitude,longitude:location.longitude,datetime:dateStr}
         })
         .catch(error => {
 
@@ -160,6 +163,9 @@ const CustomerForm = ({data,navigation,type,mode}) => {
 
          
             const locationSubmit = await getLocation();
+            let dateStr = new Date();
+            dateStr = moment(dateStr).format('YYYY-MM-DD HH:mm:ss');
+            
 
              
             formdata.append("form_id",dataCust.form_id)
@@ -171,6 +177,7 @@ const CustomerForm = ({data,navigation,type,mode}) => {
             formdata.append("user_id",user.id);
             formdata.append('location', JSON.stringify(locationVal));
             formdata.append('location_submit', JSON.stringify(locationSubmit));
+            formdata.append('complete_date',dateStr);
 
             const offData = {
               form_id:dataCust.form_id,
@@ -182,7 +189,8 @@ const CustomerForm = ({data,navigation,type,mode}) => {
               user_id:user.id,
               location: JSON.stringify(locationVal),
               location_submit: JSON.stringify(locationSubmit),
-              imageVal:imageVal
+              imageVal:imageVal,
+              complete_date:dateStr
             }
            
             var requestOptions = {
@@ -191,6 +199,8 @@ const CustomerForm = ({data,navigation,type,mode}) => {
               body: formdata,
              // redirect: 'follow'
             };
+
+            console.log(formdata)
             if(mode){
                 const url = `${API_URL2}/customer/save-form`;
            
@@ -199,12 +209,23 @@ const CustomerForm = ({data,navigation,type,mode}) => {
               .then(result => {
                  
                 setLoading(false)
+
+                  
+
+                  let customer  = storage.getString('customer') ? JSON.parse(storage.getString('customer')) : [];
+                   
+                  customer = customer.filter(item => item.id !== dataCust.id);
+                 
+                  
+                  
+                  storage.set('customer', JSON.stringify(customer));
+                  
                   navigation.navigate('Customers',{type:type,id:Math.random()})
 
 
               })
               .catch(error => {
-
+                console.log(API_URL2)
                   setLoading(false)
               });
 
@@ -220,7 +241,7 @@ const CustomerForm = ({data,navigation,type,mode}) => {
                       }
 
                 })
-                 navigation.navigate('Customers',{type:type,id:Math.random()})
+                 navigation.navigate('Customers',{id:Math.random()})
                   // const checkData = customer.filter(rss => rss.id == dataCust.id);
                   // if(checkData){
                   //     customer[checkData[0]].offline = requestOptions
@@ -260,6 +281,7 @@ const CustomerForm = ({data,navigation,type,mode}) => {
       newInputs[index].value = text;
       setContactList(newInputs);
 };
+
 
 	const formData = {"components": data.form.data.components};
 	return (
@@ -301,7 +323,7 @@ const CustomerForm = ({data,navigation,type,mode}) => {
              style={{backgroundColor:'#fff',borderColor:'#008B8B',borderRadius:6,height:40, borderWidth: 1,color: '#008B8B',textAlign: 'left',fontSize: 14,width: '100%',marginTop:0,marginBottom:10}}
           />
         )}
-        name={item.label}
+        name={item.key}
       />
       
   	}
@@ -315,7 +337,7 @@ const CustomerForm = ({data,navigation,type,mode}) => {
         render={({ field }) => (
         		<DropDown field={field} label={item.label} item={item.data.values} />
         )}
-        name={item.label}
+        name={item.key}
       />
   	}
       {errors[item.label] && <Text style={{color:'red',fontWeight:'bold'}}>This is required.</Text>}

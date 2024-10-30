@@ -4,6 +4,8 @@ import React from 'react'
 import { fetchWrapper } from '../components/helpers';
 import CustomerInfo from './customerdetail/CustomerInfo';
 import CustomerForm from './customerdetail/CustomerForm';
+import CustomerFormView from './customerdetail/CustomerFormView';
+
 import Direction from './customerdetail/Direction';
 import History from './customerdetail/History';
 import Images from './customerdetail/Images';
@@ -20,8 +22,12 @@ const CustomersDetail = ({route,navigation}) => {
          loadPage('info');
 
          const backAction = () => {
-
-         navigation.navigate('Customers',{type:type,id:Math.random()})
+          if(type == 'view'){
+            navigation.navigate('ReviewForm',{type:type,id:Math.random()})
+          }else{
+            navigation.navigate('Customers',{type:type,id:Math.random()})
+          }
+         
      
       return true;
     };
@@ -48,6 +54,11 @@ const CustomersDetail = ({route,navigation}) => {
           setPage(<CustomerForm mode={mode} type={type} data={data} navigation={navigation} />)
       }
 
+      if(page == 'viewform'){
+         
+          setPage(<CustomerFormView mode={mode} type={type} data={data} navigation={navigation} />)
+      }
+
       if(page == 'pic'){
          
           setPage(<Images type={type} mode={mode} data={data} navigation={navigation} />)
@@ -68,12 +79,24 @@ const CustomersDetail = ({route,navigation}) => {
     <ScrollView style={{position:'relative'}}>
       <View  style={{margin:20}}>
         <View style={{display:'flex',width:'100%',flexDirection:'row'}}>
-          <TouchableOpacity style={{backgroundColor:linkPage == 'form' ? '#008B8B' : '#ccc',width:'50%',padding:10,marginRight:5}}
+
+        {type == 'view' ?
+          <TouchableOpacity style={{backgroundColor:linkPage == 'viewform' ? '#008B8B' : '#ccc',width:'50%',padding:10,marginRight:5}}
+            onPress={() => loadPage('viewform')}
+          >
+
+              <Text style={{color:linkPage == 'viewform' ? '#fff' : '#000',textAlign:'center'}}>View Form</Text>
+          </TouchableOpacity>
+        :
+
+        <TouchableOpacity style={{backgroundColor:linkPage == 'form' ? '#008B8B' : '#ccc',width:'50%',padding:10,marginRight:5}}
             onPress={() => loadPage('form')}
           >
 
               <Text style={{color:linkPage == 'form' ? '#fff' : '#000',textAlign:'center'}}>Get Form</Text>
           </TouchableOpacity>
+        
+      }
           <TouchableOpacity style={{backgroundColor:linkPage == 'history' ? '#008B8B' : '#ccc',width:'50%',padding:10}}
 
              onPress={() => loadPage('history')}

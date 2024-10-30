@@ -38,23 +38,23 @@ const Attendance = ({navigation}) => {
   const [imageVal, setImageVal] = useState([]);
   const API_URL2 = process.env.API_URL;
 
-  useEffect(() => {
+  // useEffect(() => {
          
 
-    GetLocation.getCurrentPosition({
-        enableHighAccuracy: true,
-        timeout: 60000,
-    })
-    .then(location => {
-        setLocationVal({latitude:location.latitude,longitude:location.longitude})
-    })
-    .catch(error => {
-        const { code, message } = error;
-        console.warn(code, message);
-    })
+  //   GetLocation.getCurrentPosition({
+  //       enableHighAccuracy: true,
+  //       timeout: 60000,
+  //   })
+  //   .then(location => {
+  //       setLocationVal({latitude:location.latitude,longitude:location.longitude})
+  //   })
+  //   .catch(error => {
+  //       const { code, message } = error;
+  //       console.warn(code, message);
+  //   })
 
 
-      }, []);
+  //     }, []);
 
   if (example) {
     return example;
@@ -63,8 +63,27 @@ const Attendance = ({navigation}) => {
   const onBack = () => setExample(undefined);
   
   const saveImage = (data) => {
-       setLoading(true);
-       const loc = locationVal;
+
+
+    GetLocation.getCurrentPosition({
+          enableHighAccuracy: true,
+          timeout: 60000,
+          rationale: {
+            title: 'Location permission',
+            message: 'The app needs the permission to request your location.',
+            buttonPositive: 'Ok',
+          },
+        })
+        .then(async location => {
+            
+          const dateStr = new Date();
+          const locationData  = {latitude:location.latitude,longitude:location.longitude,datetime:dateStr}
+            
+            
+
+
+
+              const loc = locationData;
        var myHeaders = new Headers();
             myHeaders.append("Content-Type", "multipart/form-data");
 
@@ -89,7 +108,7 @@ const Attendance = ({navigation}) => {
            
            
 
-
+            
             
            
            
@@ -100,7 +119,7 @@ const Attendance = ({navigation}) => {
              // redirect: 'follow'
             };
             const url = `${API_URL2}/attendance/save-attendance-in`;
-            console.log(url)
+           
             fetch(`${url}`, requestOptions)
             .then(response => response.json())
             .then(result => {
@@ -117,12 +136,44 @@ const Attendance = ({navigation}) => {
 
             });
 
+             setLoading(true);
+              
+        })
+        .catch(error => {
+             
+            Linking.openSettings();
+            const { code, message } = error;
+           
+            console.log(code, message);
+        })
+
+      
+       
+
 
   } 
 
   const clockOut = async() => {
 
-    const url = `${API_URL2}/user/location`;
+
+    GetLocation.getCurrentPosition({
+          enableHighAccuracy: true,
+          timeout: 60000,
+          rationale: {
+            title: 'Location permission',
+            message: 'The app needs the permission to request your location.',
+            buttonPositive: 'Ok',
+          },
+        })
+        .then(async location => {
+            
+
+          const locationData  = {latitude:location.latitude,longitude:location.longitude}
+            
+            
+
+           
+            const url = `${API_URL2}/user/location`;
     const loc = locationVal;
              const token = ""
              const postData = {
@@ -136,6 +187,18 @@ const Attendance = ({navigation}) => {
         storage.delete('user');
         storage.delete('attendance');
         navigation.navigate('Login');
+            
+              
+        })
+        .catch(error => {
+             
+            Linking.openSettings();
+            const { code, message } = error;
+           
+            console.log(code, message);
+        })
+
+    
   }
   return (
 

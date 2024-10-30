@@ -7,6 +7,8 @@ import Attendance from '@/screens/Attendance';
 import Profile from '@/screens/Profile';
 import Customers from '@/screens/Customers';
 import CustomersDetail from '@/screens/CustomersDetail';
+import ViewForm from '@/screens/ViewForm';
+import ViewFormUser from '@/screens/ViewFormUser';
 import Announcements from '@/screens/Announcemnts';
 import Progress from '@/screens/Progress';
 import ReviewForm from '@/screens/ReviewForm';
@@ -25,6 +27,8 @@ function ApplicationNavigator() {
 				<Stack.Screen name="Attendance" component={Attendance}/>
 				<Stack.Screen name="Customers" component={Customers}/>
 				<Stack.Screen name="CustomersDetail" component={CustomersDetail}/>
+				<Stack.Screen name="view-form" component={ViewForm}/>
+				<Stack.Screen name="view-form-user" component={ViewFormUser}/>
 				<Stack.Screen name="Announcements" component={Announcements}/>
 				<Stack.Screen name="Progress" component={Progress}/>
 				<Stack.Screen name="ReviewForm" component={ReviewForm}/>

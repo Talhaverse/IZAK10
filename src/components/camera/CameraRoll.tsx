@@ -95,6 +95,8 @@ const CameraRoll = ({ onBack,setImageVal,imageVal,saveImage,mmVal }) => {
     }
     if (!image) return;
 
+    
+
     setCaptured(true);
     setCaptureImages([...captureImages, image]);
     

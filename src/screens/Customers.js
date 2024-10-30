@@ -10,19 +10,27 @@ import DropDown from './customerdetail/DropDown'
 import { useForm, Controller } from "react-hook-form"
 import DatePicker from 'react-native-date-picker'
 import moment from 'moment'
+import {SheetManager} from 'react-native-actions-sheet';
+import Icon from 'react-native-vector-icons/FontAwesome5';
+import CustomerCardReview from './customer/CustomerCardReview';
 const Customers = ({navigation,route}) => {
 
   const [networkState, setNetworkState] = useState(false);
   const [endPage, setEndPage] = useState(false);
+  const [channelTitle, setChannelTitle] = useState('In Process');
 
+    const dateStr = new Date();
+   const [fromTitle, setFromTitle] = useState(dateStr.toLocaleDateString('en-US',{day:'numeric',month:'short', year: 'numeric' }));
+      const [toTitle, setToTitle] = useState(dateStr.toLocaleDateString('en-US',{day:'numeric',month:'short', year: 'numeric' }));
   const [filterVisible, setFilterVisible] = useState(false);
   const [searchData, setSearchData] = useState({});
+  const [searchDataText,setSearchDataText] = useState('')
   const [companyList, setCompanyList] = useState([]);
    const [workingDateList, setWorkingDateList] = useState([]);
   const [bucketList, setBucketList] = useState([]);
  const [date, setDate] = useState(new Date())
   const [open, setOpen] = useState(false)
-  
+  const [statusValue, setStatusValue] = useState(1);
   const [page, setPage] = useState(0);
 
      const {
@@ -43,31 +51,33 @@ const Customers = ({navigation,route}) => {
 
     let customer  = storage.getString('customer') ? JSON.parse(storage.getString('customer')) : [];
 
-
+    console.log(customer.length)
   const paramType = 'today';
   
   const [loading,setLoading] = useState(false);
   const [type,setType] = useState(paramType);
   const [total,setTotal] = useState(0);
+  const [totalCustomer,setTotalCustomer] = useState(0);
   
    let user  = storage.getString('user') ? JSON.parse(storage.getString('user')) : [];
   const [list, setList] = useState([]);
 
     useEffect(() => {
-       
+      
        loadCompanyList();
-       loadWorkingDate();
-               loadBucketList();
+       loadOutCome();
+       //loadWorkingDate();
+       loadBucketList();
         NetInfo.fetch().then(state => {
           //state = false;
           setNetworkState(state);
-
+          
           if(state?.isInternetReachable){
-               loadOutCome();
+               
 
                 //sendData();
                 
-                loadList(paramType,state);
+                loadList(state);
           }  
           
           
@@ -75,8 +85,10 @@ const Customers = ({navigation,route}) => {
 
 
         const unsubscribe = NetInfo.addEventListener(state => {
+
+           
             setNetworkState(state);
-            loadList(paramType,state)
+            loadList(state)
            
           });
 
@@ -93,9 +105,16 @@ const Customers = ({navigation,route}) => {
           
          
          
-      }, [type,searchData,route]);
+      }, [searchData]);
+
+     useEffect(() => {
+       
+        setPage(0)
+        loadListRefresh();
+      }, [route]);
 
       const sendData = async() => {
+
            const API_URL2 = process.env.API_URL
            setLoading(true)
           let customerStorageOffline  = storage.getString('customer') ? JSON.parse(storage.getString('customer')) : [];
@@ -147,7 +166,7 @@ const Customers = ({navigation,route}) => {
                      formdata.append("user_id",offline.user_id);
                      formdata.append('location',offline.location);
                      formdata.append('location_submit', offline.location_submit);
-
+                     formdata.append('complete_date',offline.complete_date);
                      
                     var requestOptions = {
                       method: 'POST',
@@ -164,14 +183,21 @@ const Customers = ({navigation,route}) => {
                 }
                 return false
           }))
-          results.map(ids => {
+        
+          await results.map(ids => {
               customerStorageOffline = customerStorageOffline.filter(item => item.id !== ids);
           })
-          console.log(customerStorageOffline)
+
+         
+          //console.log(customerStorageOffline)
           setLoading(false)
          // console.log(delIds)
            storage.set('customer', JSON.stringify(customerStorageOffline));
-           loadList(paramType,networkState)
+           console.log("removed")
+
+           storage.delete('customer')
+           navigation.navigate('Customers',{id:Math.random()})
+           //loadList(networkState)
           // console.log("removed")
          
           
@@ -199,7 +225,7 @@ const Customers = ({navigation,route}) => {
     }
 
     const loadOutCome = async (type="text") => {
-        if(networkState?.isInternetReachable){
+        
            const API_URL2 = process.env.API_URL
             const url = `${API_URL2}/customer/out-come-list-all`;
        
@@ -207,15 +233,19 @@ const Customers = ({navigation,route}) => {
         
             const data  = await fetchWrapper.get(url)
             setLoading(false)
-            const listOutcome = data.map(item => {
+            if(data){
+                const listOutcome = data.map(item => {
 
-                return {label:item.name,value:item.id,company_id:item.company_id}
-            })
-
-             storage.set('outcomelist', JSON.stringify(listOutcome))
+                    return {label:item.name,value:item.id,company_id:item.company_id}
+                })
+                //console.log(listOutcome)
+                 storage.set('outcomelist', JSON.stringify(listOutcome))
+            }
+            
+            
 
         
-        }
+        
            
         
     }
@@ -224,7 +254,7 @@ const Customers = ({navigation,route}) => {
         
            const API_URL2 = process.env.API_URL
             const url = `${API_URL2}/customer/company-list`;
-            console.log(url)
+            
            setLoading(true)
         
             const data  = await fetchWrapper.get(url)
@@ -233,7 +263,7 @@ const Customers = ({navigation,route}) => {
 
                 return {label:item.name,value:item.id}
             })
-            console.log(listCompany)
+           
             setCompanyList(listCompany)
 
         
@@ -246,7 +276,7 @@ const Customers = ({navigation,route}) => {
         if(networkState?.isInternetReachable){
            const API_URL2 = process.env.API_URL
             const url = `${API_URL2}/customer/bucket-list?company_id=1`;
-            console.log(url)
+           
            setLoading(true)
         
             const data  = await fetchWrapper.get(url)
@@ -268,7 +298,7 @@ const Customers = ({navigation,route}) => {
        
            const API_URL2 = process.env.API_URL
             const url = `${API_URL2}/customer/date-tab?user_id=${user.id}`;
-            console.log(url)
+          
 
            setLoading(true)
         
@@ -285,25 +315,58 @@ const Customers = ({navigation,route}) => {
     }
 
   const onSubmit = async(data) => {
-    console.log(date)
-    console.log(date.toDateString())
+    
       data.assign_date = date.toDateString()
       setList([])
       setFilterVisible(false)
       setPage(0)
       setSearchData(data)
-      loadList(paramType,networkState,data)
+      let textData = '';
+       if(data.company_id){
+        const compName = companyList.filter(rss => rss.value == data.company_id)
+        
+       textData = textData + 'Company: ' + compName[0].label;
+      }
+      if(data.tracking_id){
+        textData = textData + ', Tracking: ' + data.tracking_id;
+      }
+      if(data.customer_name){
+        textData = textData + ', Name: ' + data.customer_name;
+      }
+
+      if(data.min_bal && data.max_bal){
+        textData = textData + ', Balance: ' + data.min_bal + "-" + data.max_bal;
+      }
+       
+      if(data.cycle_day){
+        textData = textData + ', Cycle Day: ' + data.cycle_day;
+      }
+
+      if(data.bucket_id){
+        const bucketName = bucketList.filter(rss => rss.value == data.bucket_id)
+        textData = textData + ', Bucket: ' + bucketName[0].label;
+      }
+
+      if(data.assign_date){
+        textData = textData + ', Date: ' + data.assign_date;
+      }
+       
+       
+      
+       
+     
+      setSearchDataText(textData)
+      loadList(networkState)
       
   }
 
   const loadNext = () => {
 
     
-    loadList(type,networkState,searchData)
+    loadList(networkState)
 }
   const meScroll = () => {
-  console.log(endPage)
-  console.log("End Page")
+ 
   if(!endPage){
       loadNext()
   }
@@ -311,20 +374,74 @@ const Customers = ({navigation,route}) => {
  
 }
 
-  const loadList = async() => {
+ const loadListRefresh = async() => {
       
-      const stateVal = networkState
+     console.log("refresh")
       const searchParam = JSON.stringify(searchData)
       setEndPage(false)
+      setList([])
+      
+      const API_URL2 = process.env.API_URL
+      const url = `${API_URL2}/customer/index?user_id=${user.id}&expand=customer,form&type=${type}&page=0&param=${searchParam}&expand=customer,form&status=${statusValue}`;
+     
+      const token = ""
+      setLoading(true)
+      const listData = await fetchWrapper.get(url,token);
+      setLoading(false)
+
+      listData.list.map(item => {
+
+            const checkData = customer.filter(rss => rss.id == item.id);
+
+              if(checkData.length == 0){
+
+                  console.log(item.form)
+                  customer.push(item);
+                  storage.set('customer', JSON.stringify(customer));
+              
+              
+
+              }
+      })
+      storage.set('customer-total', listData.total_count);
+      setTotal(listData.count)
+      setTotalCustomer(listData.total_count)
+       
+          setList(listData.list);
+      
+       
+      if(listData.list.length > 0){
+
+          const pageVal = page + 1;
+               setPage(pageVal)
+               setEndPage(false)
+      }else{
+            setEndPage(true)
+      }
+
+
+       
+      
+      
+    
+
+  }
+  const loadList = async(state) => {
+      
+      const stateVal = state
+      const searchParam = JSON.stringify(searchData)
+      setEndPage(false)
+
      if(stateVal?.isInternetReachable){
       
       const API_URL2 = process.env.API_URL
-      const url = `${API_URL2}/customer/index?user_id=${user.id}&expand=customer,form&type=${type}&page=${page}&param=${searchParam}`;
+      const url = `${API_URL2}/customer/index?user_id=${user.id}&expand=customer,user,form,submission,outcome&type=${type}&page=${page}&param=${searchParam}&status=${statusValue}`;
       console.log(url)
       const token = ""
       setLoading(true)
       const listData = await fetchWrapper.get(url,token);
       setLoading(false)
+
       listData.list.map(item => {
 
             const checkData = customer.filter(rss => rss.id == item.id);
@@ -338,12 +455,13 @@ const Customers = ({navigation,route}) => {
 
               }
       })
-
+      storage.set('customer-total', listData.total_count);
       setTotal(listData.count)
+      setTotalCustomer(listData.total_count)
        if(page == 0){
           setList(listData.list);
        }else{
-          console.log("here")
+          
           setList([...list, ...listData.list]);
        }
        
@@ -362,10 +480,12 @@ const Customers = ({navigation,route}) => {
       
     }else{
         //storage.delete('customer')
+     
         let customerStorage  = storage.getString('customer') ? JSON.parse(storage.getString('customer')) : [];
         
         
          setList(customerStorage);
+         setTotalCustomer(storage.getString('customer-total'))
     }
 
   }
@@ -375,13 +495,16 @@ const Customers = ({navigation,route}) => {
       setPage(0)
       
       setType(typeValue);
-      loadList(typeValue,networkState)
+      loadList(networkState)
   }
 
 
 const clearFilter = () => {
     reset({ company_id: "",tracking_id:"",min_bal:"",max_bal:"",cycle_day:"",bucket_id:"" })
+    setSearchData({})
+    setPage(0)
     setFilterVisible(false)
+    setSearchDataText('')
 }
 
 const renderFooter = () => {
@@ -420,14 +543,42 @@ const renderFooter = () => {
 
 
    const ItemView = ({item}) => {
-    return (
-      // Flat List Item
-      <CustomerCard type={type} mode={networkState?.isInternetReachable}  data={item} navigation={navigation} />
-    );
+    if(item.status_id == 1){
+           return (
+      
+      
+          <CustomerCard type={type} mode={networkState?.isInternetReachable}  data={item} navigation={navigation} />
+     
+          
+      
+        );
+    }else{
+
+         return (
+      
+      
+         
+     
+          <CustomerCardReview type='view-user'   mode={true}  data={item} navigation={navigation} />
+      
+       );
+
+    }
+   
   };
 
+const meChange = (value,type) => {
+    setChannelTitle(value.label);
+  
+    setStatusValue(value.value)
+    
+    setPage(0)
+        loadListRefresh();
+    SheetManager.hide('work-status-list')
+}
+const meChangeDate = () => {
 
-
+}
   return (
     <>
     
@@ -435,10 +586,55 @@ const renderFooter = () => {
     
 
      <View style={{margin:10}}>
+
+     <View style={{flexDirection:'row'}}>
+          <View style={{width:'30%'}}>
+              <Text style={{color:'#008B8B',fontWeight:'bold',fontSize:22}}>Customer</Text>
+          </View>
+
+          <View style={{width:'65%'}}>
+
+
+          {networkState?.isInternetReachable &&
+        <TouchableOpacity
+            onPress={sendData}
+            style={{flexDirection:'row',alignItems:'end',justifyContent:'flex-end',
+            
+          }}
+        >
+        
+            <FontAwesome5 name="sync-alt" style={{fontSize: 16,color: 'blue',textAlign:'right',marginRight:10}} />
+            <Text style={{color:'blue',textAlign:'right',fontSize:16,fontWeight:'bold'}}>Sync Data</Text>
+        </TouchableOpacity>
+        }
+        </View>
+        <View style={{width:'5%'}}>
+          <TouchableOpacity
+            onPress={() => setFilterVisible(true)}
+            style={{flexDirection:'column',alignItems:'end',justifyContent:'flex-end'}}
+        >
+        
+            <FontAwesome5 name="filter" style={{fontSize: 16,color: 'blue',textAlign:'right'}} />
+           
+        </TouchableOpacity>
+
+          </View>
+     </View>
+     
+        <TouchableOpacity style={{width:150,backgroundColor: '#008B8B',borderRadius: 5,paddingHorizontal: 8,paddingVertical: 5,marginRight: 10,alignItems:'flex-end'}}
+
+            onPress={() => SheetManager.show('work-status-list',{payload:{meChange:meChange}})}
+          >
+            <View style={{display: 'flex',flexDirection: 'row',alignItems: 'center'}}>
+              <Text style={{fontSize: 14,fontWeight: 400,color: '#fff',marginRight: 5,fontFamily:'Poppins-Regular'}}>{channelTitle}</Text>
+              <Icon name="chevron-down" color="#fff" style={{fontSize: 16,marginLeft:40}} />
+            </View>
+          </TouchableOpacity>
+
      <ScrollView horizontal={true} showsHorizontalScrollIndicator={false}
       style={styles.scrollContainer}
-      endFillColor="#fff" style={{marginBottom: 15}}>
-      <View style={{flexDirection:'row'}}>
+      endFillColor="#fff" style={{marginBottom: 5}}>
+      <View style={{flexDirection:'row',display:'none'}}>
           {workingDateList?.map((item,index) => {
 
               return(
@@ -450,12 +646,13 @@ const renderFooter = () => {
                           setSearchData({assign_date:item.working_date})
                           loadList()
                     }}
-                    style={{borderWidth:1,borderRadius:6,padding:5,margin:5,borderColor:'#008B8B',backgroundColor:'#008B8B'}}
+                    style={{borderWidth:1,borderRadius:6,padding:5,margin:5,borderColor:'#008B8B',backgroundColor:(item.working_date == moment(date).format("YYYY-MM-DD")) ? '#008B8B' : '#fff'}}
                     >
-                        <Text style={{color:'#fff',fontWeight:'bold'}}>
+                        <Text style={{color:(item.working_date == moment(date).format("YYYY-MM-DD")) ? '#fff' : '#008B8B',fontWeight:'bold'}}>
                         
+                        {moment(item.working_date).format('dd MMM D YYYY')}</Text>
 
-                        {moment(item.working_date).format('dd D MMM YYYY')}</Text>
+                        
                     </TouchableOpacity>
 
                 )
@@ -463,29 +660,31 @@ const renderFooter = () => {
           })}
       </View>
       </ScrollView>
-
-        <Text style={{color:'black',fontWeight:'bold',fontSize:20}}>Customer: {list.length} / {total}</Text>
+       {networkState?.isInternetReachable ?
+       <>
+       <View style={{flexDirection:'row'}}>
+          <View style={{width:'50%'}}>
+            <Text style={{color:'black',fontWeight:'bold',fontSize:15}}>Total Customer: {totalCustomer}</Text>
+          </View>
+          <View style={{width:'50%'}}>
+            <Text style={{color:'black',fontWeight:'bold',fontSize:15,textAlign:'right'}}>Filter Customer: {list.length} / {total}</Text>
+          </View>
         
-       
-        {networkState?.isInternetReachable &&
-        <TouchableOpacity
-            onPress={sendData}
-            style={{flexDirection:'column',alignItems:'end',justifyContent:'end',display:'none'}}
-        >
-        
-            <FontAwesome5 name="sync-alt" style={{fontSize: 20,color: 'blue',textAlign:'right'}} />
-            <Text style={{color:'blue',textAlign:'right',fontSize:20}}>Sync Data</Text>
-        </TouchableOpacity>
+       </View>
+        </>
+        :
+          <Text style={{color:'black',fontWeight:'bold',fontSize:15}}>Total Customer Offline: {customer.length}</Text>
         }
-
-        <TouchableOpacity
-            onPress={() => setFilterVisible(true)}
-            style={{flexDirection:'column',alignItems:'end',justifyContent:'end'}}
+        <Text
+          style={{color:'#008B8B',fontSize:14,fontWeight:'bold'}}
         >
+        {
+          searchDataText
+        }
+        </Text>
         
-            <FontAwesome5 name="filter" style={{fontSize: 20,color: 'blue',textAlign:'right'}} />
-           
-        </TouchableOpacity>
+
+        
      </View> 
      {filterVisible && 
      <View style={{margin:10}}>
@@ -644,7 +843,7 @@ const renderFooter = () => {
                  
                  style={{backgroundColor:'#fff',borderColor:'#008B8B',borderRadius:6,height:40, borderWidth: 1,color: '#008B8B',textAlign: 'left',fontSize: 14,width: '100%',marginTop:0,marginBottom:10}}
                  onFocus={() => setOpen(true)}
-                 value={date.toDateString()}
+                 value={searchData.assign_date}
 
               />   
      <DatePicker
@@ -655,6 +854,8 @@ const renderFooter = () => {
         onConfirm={(date) => {
           setOpen(false)
           setDate(date)
+          setSearchData({assign_date:date.toDateString()})
+          //setSearchDataText("Date:" + date.toDateString())
         }}
         onCancel={() => {
           setOpen(false)

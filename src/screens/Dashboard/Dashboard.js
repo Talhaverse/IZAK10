@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { View, ActivityIndicator, Text, TouchableOpacity, ScrollView, Alert,StyleSheet,SafeAreaView,Image,Modal,Pressable } from 'react-native';
+import { View, ActivityIndicator, Text, TouchableOpacity, ScrollView, Alert,StyleSheet,SafeAreaView,Image,Modal,Pressable,BackHandler } from 'react-native';
 import { Brand } from '@/components/molecules';
 import { useNavigation,Linking } from '@react-navigation/native';
 import { MMKV } from 'react-native-mmkv'
@@ -7,8 +7,10 @@ import Break from './Break'
 import { fetchWrapper } from '../../components/helpers';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import GetLocation from 'react-native-get-location'
+import NetInfo from "@react-native-community/netinfo";
 function Dashboard() {
     const navigation = useNavigation();
+      const [networkState, setNetworkState] = useState(null);
     const [modalVisible, setModalVisible] = useState(false)
     const [loading,setLoading] = useState(false);
     const [status, setStatus] = useState(false)
@@ -20,7 +22,22 @@ function Dashboard() {
     })
 
      
+     let attendanceData  = storage.getString('attendance') ? JSON.parse(storage.getString('attendance')) : null;
+
+
+   let newDate = new Date()
+  let date = newDate.getDate();
+  let month = newDate.getMonth() + 1;
+  let year = newDate.getFullYear();
+  const separator='-'
+  const toDay = `${year}${separator}${month<10?`0${month}`:`${month}`}${separator}${date<10?`0${date}`:`${date}`}`
+ 
+
+  if(toDay != attendanceData?.date){
      
+     storage.delete('attendance')
+     
+  }
      let user  = storage.getString('user') ? JSON.parse(storage.getString('user')) : [];
 
      
@@ -34,6 +51,43 @@ function Dashboard() {
 
       }, [status]);
 
+     useEffect(() => {
+    const backAction = () => {
+
+              if(navigation.getState().routes[navigation.getState().index].name == 'Dashboard'){
+                  BackHandler.exitApp()
+                  return true;
+              }
+              return false;
+            };
+
+            const backHandler = BackHandler.addEventListener(
+              'hardwareBackPress',
+              backAction,
+            );
+
+            return () => backHandler.remove();
+  }, []);
+
+    useEffect(() => {
+    // Get the network state once
+    NetInfo.fetch().then(state => {
+      setNetworkState(state);
+      
+    });
+
+    // Subscribe to network state updates
+    const unsubscribe = NetInfo.addEventListener(state => {
+      setNetworkState(state);
+      
+    });
+
+    // Unsubscribe from network state updates
+    return () => {
+      unsubscribe();
+    };
+  }, []);
+
     const openSetting = () => {
          Linking.openSettings().catch(err => {
 
@@ -43,18 +97,48 @@ function Dashboard() {
 
     const sendSos = async() => {
 
-        setLoading(true)
+
+        GetLocation.getCurrentPosition({
+          enableHighAccuracy: true,
+          timeout: 60000,
+          rationale: {
+            title: 'Location permission',
+            message: 'The app needs the permission to request your location.',
+            buttonPositive: 'Ok',
+          },
+        })
+        .then(async location => {
+            
+
+          const locationData  = {latitude:location.latitude,longitude:location.longitude}
+            
+            
+
+            setLoading(true)
         
-    const url = `${API_URL2}/user/sos`;
-         const token = ""
-         const postData = {
-            user_id:user.id,
-            location:locationVal
-         }
+            const url = `${API_URL2}/user/sos`;
+                 const token = ""
+                 const postData = {
+                    user_id:user.id,
+                    location:locationData
+                 }
          
 
              const listData = await fetchWrapper.post(url,token,postData);
              setLoading(false)
+
+            
+              
+        })
+        .catch(error => {
+             
+            Linking.openSettings();
+            const { code, message } = error;
+           
+            console.log(code, message);
+        })
+
+        
     }
     const changeStatus = () => {
         setStatus(status => !status);
@@ -182,9 +266,12 @@ function Dashboard() {
                     
               
 
-                    <Text style={{color: 'white',fontSize:20,padding:20}}>Supervisor(s):</Text>
+                    <Text style={{color: 'white',fontSize:20,padding:20}}>Supervisor(s): {user.report_to}</Text>
+                    
             </View>
-            
+
+
+            {attendanceData &&
             <TouchableOpacity 
 
             onPress={() => startBreak()}
@@ -192,11 +279,18 @@ function Dashboard() {
                 
                 <Text style={{color: 'white',fontSize:15,marginTop:2}}>Start Break</Text>
             </TouchableOpacity>
-            
+            }
                         <ScrollView style={{ flexGrow:1}}>
                             
                             <View style={{padding:20,flexDirection: 'row',flexWrap:'wrap',justifyContent: 'space-between'}}>
 
+                            {networkState?.isInternetReachable ?
+                            <>
+                            {!attendanceData ? 
+                            <Box screenname={"Attendance"}  imageSource={require('../../theme/assets/images/taskdone.png')} text="Attendance" />
+                            
+                            :
+                            <>
                             <Box screenname={"Attendance"}  imageSource={require('../../theme/assets/images/taskdone.png')} text="Attendance" />
                             <Box screenname={"Customers"} imageSource={require('../../theme/assets/images/defaulters.png')} text="Customers" />
                             <Box screenname={"Announcements"} imageSource={require('../../theme/assets/images/announcement.png')} text="Announcements" />
@@ -205,7 +299,12 @@ function Dashboard() {
                             <Box screenname={"DownloadReport"} imageSource={require('../../theme/assets/images/review.png')} text="Download Reports" />
                             <Box screenname={"AccountSetting"} imageSource={require('../../theme/assets/images/attendance.png')} text="Account Setting" />
                             <Box screenname={"Profile"} imageSource={require('../../theme/assets/images/pers.png')} text="Profile" />
-                            
+                            </>
+                            }
+                            </>
+                            :
+                            <Box screenname={"Customers"} imageSource={require('../../theme/assets/images/defaulters.png')} text="Customers" />
+                            }
                             </View>
 
                         </ScrollView>
@@ -280,6 +379,7 @@ loading: {
             width: 130,
             height: 150,
             backgroundColor: '#ffffff',
+            color:'#000',
             borderRadius: 10,
             justifyContent: 'center',
             alignItems: 'center',
