@@ -26,7 +26,7 @@ const CustomerCard = ({data,navigation,type,mode}) => {
 	
 	return (
 
-		<TouchableOpacity style={{borderBottomWidth:1,borderColor:'#10cdcd',backgroundColor:'#c7ecec',borderRadius:6,marginBottom:10,margin:10}}
+		<TouchableOpacity style={{borderBottomWidth:1,borderColor:'#10cdcd',backgroundColor:'#c7ecec',borderRadius:6}}
 
 			onPress={() => detail()}
 		>

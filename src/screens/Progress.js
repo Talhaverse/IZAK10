@@ -71,15 +71,15 @@ const loadList = async() => {
             <View style={{flexDirection:'row'}}>
                 <View style={{width:'33%',backgroundColor:'#fff'}}>
                     
-                    <Text style={{color:'black',fontWeight:'bold',fontSize:18,textAlign:'center'}}>{Math.abs(data?.cases[0].pending) + Math.abs(data?.cases[0].complete)}</Text>
+                    <Text style={{color:'black',fontWeight:'bold',fontSize:18,textAlign:'center'}}>{Math.abs(data?.cases[0]?.pending) + Math.abs(data?.cases[0].complete)}</Text>
                 </View>
                 <View style={{width:'33%',backgroundColor:'#fff'}}>
                     
-                    <Text style={{color:'black',fontWeight:'bold',fontSize:18,textAlign:'center'}}>{data?.cases[0].pending}</Text>
+                    <Text style={{color:'black',fontWeight:'bold',fontSize:18,textAlign:'center'}}>{data?.cases[0]?.pending}</Text>
                 </View>
                 <View style={{width:'33%',backgroundColor:'#fff'}}>
                    
-                    <Text style={{color:'black',fontWeight:'bold',fontSize:18,textAlign:'center'}}>{data?.cases[0].complete}</Text>
+                    <Text style={{color:'black',fontWeight:'bold',fontSize:18,textAlign:'center'}}>{data?.cases[0]?.complete}</Text>
                 </View>
             </View>
         </View>
@@ -117,15 +117,15 @@ const loadList = async() => {
                 </View>
                 <View style={{width:'25%',backgroundColor:'#fff'}}>
                     
-                    <Text style={{color:'black',fontWeight:'bold',fontSize:18,textAlign:'center'}}>{Math.abs(rs.pending) + Math.abs(rs.complete)}</Text>
+                    <Text style={{color:'black',fontWeight:'bold',fontSize:18,textAlign:'center'}}>{Math.abs(rs.pending) + Math.abs(rs?.complete)}</Text>
                 </View>
                 <View style={{width:'25%',backgroundColor:'#fff'}}>
                     
-                    <Text style={{color:'black',fontWeight:'bold',fontSize:18,textAlign:'center'}}>{rs.pending}</Text>
+                    <Text style={{color:'black',fontWeight:'bold',fontSize:18,textAlign:'center'}}>{rs?.pending}</Text>
                 </View>
                 <View style={{width:'25%',backgroundColor:'#fff'}}>
                    
-                    <Text style={{color:'black',fontWeight:'bold',fontSize:18,textAlign:'center'}}>{rs.complete}</Text>
+                    <Text style={{color:'black',fontWeight:'bold',fontSize:18,textAlign:'center'}}>{rs?.complete}</Text>
                 </View>
             </View>
 
@@ -171,7 +171,7 @@ const loadList = async() => {
                 </View>
                 <View style={{width:'25%',backgroundColor:'#fff'}}>
                     
-                    <Text style={{color:'black',fontWeight:'bold',fontSize:18,textAlign:'center'}}>{Math.abs(rs.pending) + Math.abs(rs.complete)}</Text>
+                    <Text style={{color:'black',fontWeight:'bold',fontSize:18,textAlign:'center'}}>{Math.abs(rs.pending) + Math.abs(rs?.complete)}</Text>
                 </View>
                 <View style={{width:'25%',backgroundColor:'#fff'}}>
                     

@@ -1,6 +1,10 @@
 import StatusList from './StatusList';
 import DateList from './DateList';
 import WorkStatusList from './WorkStatusList';
+import UserList from './UserList';
+import FormList from './FormList';
+import BucketList from './BucketList';
+
 import {registerSheet} from 'react-native-actions-sheet';
 
 /**
@@ -10,6 +14,9 @@ import {registerSheet} from 'react-native-actions-sheet';
 registerSheet('status-list', StatusList);
 registerSheet('date-list', DateList);
 registerSheet('work-status-list', WorkStatusList);
+registerSheet('user-list', UserList);
+registerSheet('form-list', FormList);
+registerSheet('bucket-list', BucketList);
 // registerSheet('status-menu', StatusMenu);
 export {};
  

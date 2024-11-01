@@ -8,7 +8,17 @@ import { fetchWrapper } from '../../components/helpers';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import GetLocation from 'react-native-get-location'
 import NetInfo from "@react-native-community/netinfo";
+import { useNetInfo } from '@react-native-community/netinfo'
 function Dashboard() {
+
+
+    const netInfo = useNetInfo()
+
+  useEffect(() => {
+    console.log('net info changed, new state: ', netInfo)
+     
+  }, [netInfo])
+
     const navigation = useNavigation();
       const [networkState, setNetworkState] = useState(null);
     const [modalVisible, setModalVisible] = useState(false)
@@ -69,24 +79,24 @@ function Dashboard() {
             return () => backHandler.remove();
   }, []);
 
-    useEffect(() => {
-    // Get the network state once
-    NetInfo.fetch().then(state => {
-      setNetworkState(state);
+  //   useEffect(() => {
+  //   // Get the network state once
+  //   NetInfo.fetch().then(state => {
+  //     setNetworkState(state);
       
-    });
+  //   });
 
-    // Subscribe to network state updates
-    const unsubscribe = NetInfo.addEventListener(state => {
-      setNetworkState(state);
+  //   // Subscribe to network state updates
+  //   const unsubscribe = NetInfo.addEventListener(state => {
+  //     setNetworkState(state);
       
-    });
+  //   });
 
-    // Unsubscribe from network state updates
-    return () => {
-      unsubscribe();
-    };
-  }, []);
+  //   // Unsubscribe from network state updates
+  //   return () => {
+  //     unsubscribe();
+  //   };
+  // }, []);
 
     const openSetting = () => {
          Linking.openSettings().catch(err => {
@@ -250,13 +260,14 @@ function Dashboard() {
 			<View style={styles.upperview}>
                 <View style={{display: 'flex',flexDirection: 'row',justifyContent:'space-between'}}>
                 <Text style={{fontSize:30,color: 'white',padding:20,fontWeight: 'bold'}}>{user.full_name}</Text>
+                    {netInfo?.isInternetReachable &&
                     <TouchableOpacity 
                     onPress = {() => sendSos()}
                     style={{backgroundColor: 'red',display:'flex',flexDirection: 'row',height:40,width:76,borderRadius:30,alignItems:'center',padding:8,justifyContent:"space-evenly"}}>
                         <FontAwesome name="bell" style={{fontSize: 15,color: '#fff',marginRight: 0}} />
                         <Text style={{color: 'white',fontSize:15,marginTop:2,fontWeight:'bold'}}>SOS</Text>
                     </TouchableOpacity>
-
+                    }
 
                 </View>
 
@@ -271,7 +282,7 @@ function Dashboard() {
             </View>
 
 
-            {attendanceData &&
+            {(attendanceData && netInfo?.isInternetReachable) &&
             <TouchableOpacity 
 
             onPress={() => startBreak()}
@@ -284,7 +295,7 @@ function Dashboard() {
                             
                             <View style={{padding:20,flexDirection: 'row',flexWrap:'wrap',justifyContent: 'space-between'}}>
 
-                            {networkState?.isInternetReachable ?
+                            {netInfo?.isInternetReachable ?
                             <>
                             {!attendanceData ? 
                             <Box screenname={"Attendance"}  imageSource={require('../../theme/assets/images/taskdone.png')} text="Attendance" />

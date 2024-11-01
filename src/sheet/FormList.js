@@ -1,6 +1,7 @@
-import React, {useRef,useState} from 'react';
+import React, {useRef,useState,useEffect} from 'react';
 import DropDownPicker from 'react-native-dropdown-picker';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
+import { fetchWrapper } from '../components/helpers'
 import {
   View,Text,StyleSheet,Image,TouchableOpacity,ScrollView,TextInput
 } from 'react-native';
@@ -8,27 +9,56 @@ import ActionSheet, {
   ActionSheetRef,
   SheetProps,
 } from 'react-native-actions-sheet';
+import { MMKV } from 'react-native-mmkv'
 
 
-
-function StatusList({sheetId, payload}: SheetProps<{data: string}>) {
+function FormList({sheetId, payload}: SheetProps<{data: string}>) {
   const actionSheetRef = useRef(null); 
-
+ const [loading,setLoading] = useState(false);
   const {meChange} = payload
-
+  const [data, setData] = useState([]);
   const [assignopen, setAssignOpen] = useState();
   const [assignvalue, setAssignValue] = useState('assigned');
-  const [assignItems, setAssignItems] = useState([
   
-    
-    {label: 'In Process', value: 1,icon:'user-clock',color:'orange'},
-    {label: 'Completed', value: 10,icon:'user-check',color:'green'},
-    {label: 'Priority', value: 0,icon:'paper-plane',color:'blue'},
-    {label: 'Auto Allocation', value: 200,icon:'paper-plane',color:'brown'},
-    
-    
-  ]);
 
+  const storage = new MMKV({
+      id: `izak-10`,
+      
+    })
+
+
+  let user  = storage.getString('user') ? JSON.parse(storage.getString('user')) : [];
+  useEffect(() => {
+       
+        loadList();
+      }, []);
+
+  const loadList = async() => {
+      
+     
+     
+      
+      const API_URL2 = process.env.API_URL
+      const url = `${API_URL2}/user/form-list?company_id=${user.company_ids}`;
+      console.log(url)
+      const token = ""
+      setLoading(true)
+      const listData = await fetchWrapper.get(url,token);
+      
+        console.log(listData)
+       
+          setData(listData);
+      
+       
+      setLoading(false)
+
+       setDataLoad(true)
+       
+      
+      
+    
+
+  }
   
   return (
     <ActionSheet
@@ -69,18 +99,20 @@ function StatusList({sheetId, payload}: SheetProps<{data: string}>) {
              }}>
 
                <View>
-                  {assignItems.map(item => {
+
+                
+                  {data?.data?.map(item => {
 
 
                         return (
 
 
                                <TouchableOpacity style={{display: 'flex',flexDirection: 'row',paddingBottom:10,marginBottom: 15,borderBottomWidth:1,borderColor:'#000'}}
-                                  onPress={() => meChange(item,'channel')}
+                                  onPress={() => meChange(item.id,item.name)}
                                
                                >
-                                    <FontAwesome5 name={item.icon} style={{fontSize: 20,color: item.color,textAlign:'left',marginRight:10}} />
-                                    <Text style={{fontSize: 18,color: item.color,fontWeight: 400,fontFamily:'Poppins-Regular'}}>{item.label}</Text>
+                                    
+                                    <Text style={{fontSize: 18,color: 'black',fontWeight: 400,fontFamily:'Poppins-Regular'}}>{item.name}</Text>
                                 </TouchableOpacity>
                           )
 
@@ -202,4 +234,4 @@ loading: {
   }
 });
 
-export default StatusList;
+export default FormList;
