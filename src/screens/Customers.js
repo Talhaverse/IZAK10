@@ -3,6 +3,7 @@ import { View, Text,TouchableOpacity,ScrollView,ActivityIndicator,StyleSheet,Fla
 import React from 'react'
 import { fetchWrapper } from '../components/helpers';
 import NetInfo from "@react-native-community/netinfo";
+import { useNetInfo } from '@react-native-community/netinfo'
 import CustomerCard from './customer/CustomerCard';
 import { MMKV } from 'react-native-mmkv'
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
@@ -13,10 +14,14 @@ import moment from 'moment'
 import {SheetManager} from 'react-native-actions-sheet';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import CustomerCardReview from './customer/CustomerCardReview';
+import SubBucket from './customer/SubBucket';
+
 const Customers = ({navigation,route}) => {
 
   const [networkState, setNetworkState] = useState(false);
   const [endPage, setEndPage] = useState(false);
+  const [syncStart, setSyncStart] = useState(false);
+  
   const [channelTitle, setChannelTitle] = useState('In Process');
 
     const dateStr = new Date();
@@ -31,6 +36,10 @@ const Customers = ({navigation,route}) => {
  const [date, setDate] = useState(new Date())
   const [open, setOpen] = useState(false)
   const [statusValue, setStatusValue] = useState(1);
+  const [bucketValue, setBucketValue] = useState(0);
+  const [bucketTitle, setBucketTitle] = useState('Select Bucket');
+  const [bucketBreakUp, setBucketBreackup] = useState({});
+  
   const [page, setPage] = useState(0);
 
      const {
@@ -51,7 +60,7 @@ const Customers = ({navigation,route}) => {
 
     let customer  = storage.getString('customer') ? JSON.parse(storage.getString('customer')) : [];
 
-    console.log(customer.length)
+ 
   const paramType = 'today';
   
   const [loading,setLoading] = useState(false);
@@ -62,40 +71,50 @@ const Customers = ({navigation,route}) => {
    let user  = storage.getString('user') ? JSON.parse(storage.getString('user')) : [];
   const [list, setList] = useState([]);
 
+  
+const netInfo = useNetInfo()
+
+  useEffect(() => {
+    console.log('net info changed, new state: ', netInfo)
+     if(netInfo?.isInternetReachable){
+        sendData();
+     }
+  }, [netInfo])
+
     useEffect(() => {
       
        loadCompanyList();
        loadOutCome();
        //loadWorkingDate();
        loadBucketList();
-        NetInfo.fetch().then(state => {
-          //state = false;
-          setNetworkState(state);
+        // NetInfo.fetch().then(state => {
+        //   //state = false;
+        //   setNetworkState(state);
           
-          if(state?.isInternetReachable){
+        //   if(state?.details?.isInternetReachable){
                
 
-                //sendData();
+        //         sendData();
                 
-                loadList(state);
-          }  
+        //         //loadList(state);
+        //   }  
           
           
-        });
+        // });
 
 
-        const unsubscribe = NetInfo.addEventListener(state => {
+        // const unsubscribe = NetInfo.addEventListener(state => {
 
            
-            setNetworkState(state);
-            loadList(state)
+        //     setNetworkState(state);
+        //     loadList(state)
            
-          });
+        //   });
 
-          // Unsubscribe from network state updates
-          return () => {
-            unsubscribe();
-          };
+        //   // Unsubscribe from network state updates
+        //   return () => {
+        //     unsubscribe();
+        //   };
         
 
           
@@ -114,7 +133,8 @@ const Customers = ({navigation,route}) => {
       }, [route]);
 
       const sendData = async() => {
-
+          
+            setSyncStart(true);
            const API_URL2 = process.env.API_URL
            setLoading(true)
           let customerStorageOffline  = storage.getString('customer') ? JSON.parse(storage.getString('customer')) : [];
@@ -196,7 +216,10 @@ const Customers = ({navigation,route}) => {
            console.log("removed")
 
            storage.delete('customer')
-           navigation.navigate('Customers',{id:Math.random()})
+           
+           loadListRefresh(statusValue)
+            setSyncStart(false);
+           //navigation.navigate('Customers',{id:Math.random()})
            //loadList(networkState)
           // console.log("removed")
          
@@ -209,8 +232,7 @@ const Customers = ({navigation,route}) => {
         const fR = await fetch(`${url}`, requestOptions)
                     .then(response => response.json())
                     .then(result => {
-                      console.log(rs.id)
-                        console.log(result)
+                     
                         return rs.id
                         //console.log(result)
                         //customerStorageOffline = customerStorageOffline.filter(item => item.id !== rs.id);
@@ -273,7 +295,7 @@ const Customers = ({navigation,route}) => {
     }
 
     const loadBucketList = async (type="text") => {
-        if(networkState?.isInternetReachable){
+        if(netInfo?.isInternetReachable){
            const API_URL2 = process.env.API_URL
             const url = `${API_URL2}/customer/bucket-list?company_id=1`;
            
@@ -356,14 +378,14 @@ const Customers = ({navigation,route}) => {
        
      
       setSearchDataText(textData)
-      loadList(networkState)
+      loadList(netInfo)
       
   }
 
   const loadNext = () => {
 
     
-    loadList(networkState)
+    loadList(netInfo)
 }
   const meScroll = () => {
  
@@ -374,19 +396,24 @@ const Customers = ({navigation,route}) => {
  
 }
 
- const loadListRefresh = async() => {
+ const loadListRefresh = async(status_id='') => {
       
      console.log("refresh")
       const searchParam = JSON.stringify(searchData)
       setEndPage(false)
       setList([])
-      
+      let statusDataValue = statusValue
+      if(status_id != ''){
+          statusDataValue = status_id;
+      }
+     
       const API_URL2 = process.env.API_URL
-      const url = `${API_URL2}/customer/index?user_id=${user.id}&expand=customer,form&type=${type}&page=0&param=${searchParam}&expand=customer,form&status=${statusValue}`;
+      const url = `${API_URL2}/customer/index?user_id=${user.id}&expand=customer,form&type=${type}&page=0&param=${searchParam}&expand=customer,form&status=${statusDataValue}`;
      
       const token = ""
       setLoading(true)
       const listData = await fetchWrapper.get(url,token);
+
       setLoading(false)
 
       listData.list.map(item => {
@@ -395,7 +422,7 @@ const Customers = ({navigation,route}) => {
 
               if(checkData.length == 0){
 
-                  console.log(item.form)
+                
                   customer.push(item);
                   storage.set('customer', JSON.stringify(customer));
               
@@ -432,7 +459,7 @@ const Customers = ({navigation,route}) => {
       const searchParam = JSON.stringify(searchData)
       setEndPage(false)
 
-     if(stateVal?.isInternetReachable){
+     if(netInfo?.isInternetReachable){
       
       const API_URL2 = process.env.API_URL
       const url = `${API_URL2}/customer/index?user_id=${user.id}&expand=customer,user,form,submission,outcome&type=${type}&page=${page}&param=${searchParam}&status=${statusValue}`;
@@ -495,7 +522,7 @@ const Customers = ({navigation,route}) => {
       setPage(0)
       
       setType(typeValue);
-      loadList(networkState)
+      loadList(netInfo)
   }
 
 
@@ -546,9 +573,9 @@ const renderFooter = () => {
     if(item.status_id == 1){
            return (
       
-      
-          <CustomerCard type={type} mode={networkState?.isInternetReachable}  data={item} navigation={navigation} />
-     
+          <View style={{margin:10,marginTop:0}}>
+          <CustomerCard type={type} mode={netInfo?.isInternetReachable}  data={item} navigation={navigation} />
+            </View>
           
       
         );
@@ -573,9 +600,23 @@ const meChange = (value,type) => {
     setStatusValue(value.value)
     
     setPage(0)
-        loadListRefresh();
+    if(value.value != 200){
+        loadListRefresh(value.value);
+    }
+    
     SheetManager.hide('work-status-list')
 }
+const meChangeBucket = (id,name,pending,picked,completed) => {
+    setBucketTitle(name);
+  
+    setBucketValue(id)
+    
+    setPage(0)
+    
+    setBucketBreackup({pending,picked,completed})
+    SheetManager.hide('bucket-list')
+}
+
 const meChangeDate = () => {
 
 }
@@ -588,48 +629,27 @@ const meChangeDate = () => {
      <View style={{margin:10}}>
 
      <View style={{flexDirection:'row'}}>
-          <View style={{width:'30%'}}>
+          <View style={{width:'50%'}}>
               <Text style={{color:'#008B8B',fontWeight:'bold',fontSize:22}}>Customer</Text>
           </View>
 
-          <View style={{width:'65%'}}>
+          <View style={{width:'50%'}}>
 
-
-          {networkState?.isInternetReachable &&
-        <TouchableOpacity
-            onPress={sendData}
-            style={{flexDirection:'row',alignItems:'end',justifyContent:'flex-end',
-            
-          }}
-        >
-        
-            <FontAwesome5 name="sync-alt" style={{fontSize: 16,color: 'blue',textAlign:'right',marginRight:10}} />
-            <Text style={{color:'blue',textAlign:'right',fontSize:16,fontWeight:'bold'}}>Sync Data</Text>
-        </TouchableOpacity>
-        }
-        </View>
-        <View style={{width:'5%'}}>
-          <TouchableOpacity
-            onPress={() => setFilterVisible(true)}
-            style={{flexDirection:'column',alignItems:'end',justifyContent:'flex-end'}}
-        >
-        
-            <FontAwesome5 name="filter" style={{fontSize: 16,color: 'blue',textAlign:'right'}} />
-           
-        </TouchableOpacity>
-
-          </View>
-     </View>
-     
-        <TouchableOpacity style={{width:150,backgroundColor: '#008B8B',borderRadius: 5,paddingHorizontal: 8,paddingVertical: 5,marginRight: 10,alignItems:'flex-end'}}
+                  <TouchableOpacity style={{width:'100%',backgroundColor: '#008B8B',borderRadius: 5,paddingHorizontal: 8,paddingVertical: 5,marginRight: 10,justifyContent:'flex-end',alignItems:'end'}}
 
             onPress={() => SheetManager.show('work-status-list',{payload:{meChange:meChange}})}
           >
             <View style={{display: 'flex',flexDirection: 'row',alignItems: 'center'}}>
-              <Text style={{fontSize: 14,fontWeight: 400,color: '#fff',marginRight: 5,fontFamily:'Poppins-Regular'}}>{channelTitle}</Text>
-              <Icon name="chevron-down" color="#fff" style={{fontSize: 16,marginLeft:40}} />
+              <Text style={{width:'85%',fontSize: 14,fontWeight: 400,color: '#fff',marginRight: 5,fontFamily:'Poppins-Regular'}}>{channelTitle}</Text>
+              <Icon name="chevron-down" color="#fff" style={{fontSize: 16,marginLeft:5}} />
             </View>
           </TouchableOpacity>
+          
+        </View>
+       
+     </View>
+     
+
 
      <ScrollView horizontal={true} showsHorizontalScrollIndicator={false}
       style={styles.scrollContainer}
@@ -660,7 +680,40 @@ const meChangeDate = () => {
           })}
       </View>
       </ScrollView>
-       {networkState?.isInternetReachable ?
+      {statusValue != 200 &&
+      <>
+      
+       <View style={{flexDirection:'row',justifyContent:'flex-end'}}>
+
+       {netInfo?.isInternetReachable &&
+       <>
+        <TouchableOpacity
+            onPress={sendData}
+            style={{flexDirection:'row',alignItems:'end',justifyContent:'flex-end',
+            
+          }}
+        >
+        
+            <FontAwesome5 name="sync-alt" style={{fontSize: 16,color: 'blue',textAlign:'right',marginRight:10}} />
+            <Text style={{color: syncStart ? 'green' : 'blue',textAlign:'right',fontSize:16,fontWeight:'bold'}}>Sync Data</Text>
+        </TouchableOpacity>
+
+
+             <TouchableOpacity
+            onPress={() => setFilterVisible(true)}
+            style={{flexDirection:'column',alignItems:'end',justifyContent:'flex-end'}}
+        >
+        
+            <FontAwesome5 name="filter" style={{fontSize: 16,color: 'blue',textAlign:'right'}} />
+           
+        </TouchableOpacity>
+        </>
+        }
+
+       
+       </View>
+
+       {netInfo?.isInternetReachable ?
        <>
        <View style={{flexDirection:'row'}}>
           <View style={{width:'50%'}}>
@@ -682,7 +735,8 @@ const meChangeDate = () => {
           searchDataText
         }
         </Text>
-        
+       </>
+       } 
 
         
      </View> 
@@ -886,18 +940,30 @@ const meChangeDate = () => {
      </View>
     }
       <SafeAreaView style={{flex: 1}}>
-      <View style={styles.container}>
-        <FlatList
-          data={list}
-          keyExtractor={(item, index) => index.toString()}
-         
-          
-          renderItem={ItemView}
-          ListFooterComponent={renderFooter}
-          onEndReached={meScroll}
-         
-        />
-      </View>
+      
+        {statusValue == 200 ? 
+
+
+            <SubBucket 
+            bucketBreakUp={bucketBreakUp}
+            type={type} mode={netInfo?.isInternetReachable} route={route}  navigation={navigation}
+            user={user} bucketTitle={bucketTitle} bucketValue={bucketValue} meChangeBucket={meChangeBucket} />
+        :
+                <View style={styles.container}>
+                <FlatList
+                      data={list}
+                      keyExtractor={(item, index) => index.toString()}
+                     
+                      
+                      renderItem={ItemView}
+                      ListFooterComponent={renderFooter}
+                      onEndReached={meScroll}
+                     
+                    />
+                 </View>
+        }
+        
+     
     </SafeAreaView>
 
      
