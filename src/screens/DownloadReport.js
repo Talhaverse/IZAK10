@@ -96,8 +96,8 @@ const meDownload = async() => {
        
 }
 const downloadFile = (file_name) => {
-  const API_URL2 = process.env.API_URL
-    const downloadUrl = `https://0e30-111-88-82-112.ngrok-free.app/izak/web/download/${file_name}`
+  const API_URL_DOWNLOAD = process.env.API_URL_DOWNLOAD
+    const downloadUrl = `${API_URL_DOWNLOAD}/web/download/${file_name}`
    const { dirs } = RNFetchBlob.fs;
    const dirToSave =
      Platform.OS === 'ios' ? dirs.DocumentDir : dirs.DownloadDir;
@@ -139,9 +139,15 @@ const downloadFile = (file_name) => {
            });
   }
   return (
-     <View style={{margin:0,backgroundColor:'#fff'}}>
+    <SafeAreaView style={{flex:1}}>
+    {loading && 
+        <View style={styles.loading}>
+          <ActivityIndicator color="#fff" size='large' />
+        </View>
+        }
+     <View style={{margin:0,backgroundColor:'#fff',height: '100%'}}>
      <View style={{margin:10}}>
-     <Text style={{color:'#008B8B',fontWeight:'bold',fontSize:22}}>Downlaod Report</Text>
+     <Text style={{color:'#008B8B',fontWeight:'bold',fontSize:22}}>Download Report</Text>
      
 
         <View style={{flexDirection:'row'}}>
@@ -207,6 +213,7 @@ const downloadFile = (file_name) => {
       
     </View>
     </View>
+    </SafeAreaView>
   )
 }
 

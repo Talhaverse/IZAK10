@@ -64,7 +64,7 @@ const Attendance = ({navigation}) => {
   
   const saveImage = (data) => {
 
-
+setLoading(true)
     GetLocation.getCurrentPosition({
           enableHighAccuracy: true,
           timeout: 60000,
@@ -124,19 +124,21 @@ const Attendance = ({navigation}) => {
             .then(response => response.json())
             .then(result => {
                
-               setLoading(false);
+               
                storage.set('attendance', JSON.stringify(result))
                navigation.navigate('Dashboard',{id:Math.random()})
+               setLoading(false)
 
 
             })
             .catch(error => {
-              setLoading(false);
+             
               console.log('error', error)
+              setLoading(false)
 
             });
 
-             setLoading(true);
+             setLoading(false);
               
         })
         .catch(error => {
@@ -155,7 +157,7 @@ const Attendance = ({navigation}) => {
 
   const clockOut = async() => {
 
-
+    setLoading(true)
     GetLocation.getCurrentPosition({
           enableHighAccuracy: true,
           timeout: 60000,
@@ -166,6 +168,7 @@ const Attendance = ({navigation}) => {
           },
         })
         .then(async location => {
+          
             
 
           const locationData  = {latitude:location.latitude,longitude:location.longitude}
@@ -186,6 +189,7 @@ const Attendance = ({navigation}) => {
         const listData = await fetchWrapper.post(url,token,postData);
         storage.delete('user');
         storage.delete('attendance');
+        setLoading(false)
         navigation.navigate('Login');
             
               

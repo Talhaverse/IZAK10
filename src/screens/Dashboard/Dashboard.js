@@ -8,7 +8,10 @@ import { fetchWrapper } from '../../components/helpers';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import GetLocation from 'react-native-get-location'
 import NetInfo from "@react-native-community/netinfo";
-import { useNetInfo } from '@react-native-community/netinfo'
+import { useNetInfo } from '@react-native-community/netinfo';
+
+import { PermissionsAndroid } from 'react-native';
+
 function Dashboard() {
 
 
@@ -154,10 +157,45 @@ function Dashboard() {
         setStatus(status => !status);
     }
 
-    const Box = ({ imageSource, text,screenname }) => (
-        
-        
-        <TouchableOpacity onPress={() => navigation.navigate(screenname)}>
+    const requestCameraPermission = async () => {
+      try {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.CAMERA,
+          {
+            title: 'Camera Permission',
+            message:
+              'IZAK App needs access to your camera ',
+         
+            buttonPositive: 'OK',
+          },
+        );
+        if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+            return true
+        } else {
+          return false;
+        }
+      } catch (err) {
+        console.warn(err);
+      }
+    };
+
+    const Box = ({ imageSource, text,screenname }) => {        
+        const handlePress = async ()=>{
+            if(screenname === "Attendance"){
+                const permission = await requestCameraPermission()
+                if(permission){
+                    navigation.navigate(screenname);
+                }
+
+
+            }
+            else{
+             navigation.navigate(screenname);
+            }
+
+        }
+        return(
+             <TouchableOpacity onPress={handlePress}>
     
         <View style={styles.box}>
         <Image source={imageSource} style={styles.image} />
@@ -165,7 +203,10 @@ function Dashboard() {
         </View>
     
         </TouchableOpacity>
-      );
+            )
+        
+       
+      };
    
     const startBreak = () => {
             setModalVisible(true)
