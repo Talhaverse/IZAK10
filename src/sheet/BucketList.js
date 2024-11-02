@@ -19,7 +19,7 @@ function BucketList({sheetId, payload}: SheetProps<{data: string}>) {
   const [data, setData] = useState([]);
   const [assignopen, setAssignOpen] = useState();
   const [assignvalue, setAssignValue] = useState('assigned');
-  
+  const [dataCount,setDataCount] = useState(false);
 
   const storage = new MMKV({
       id: `izak-10`,
@@ -41,11 +41,13 @@ function BucketList({sheetId, payload}: SheetProps<{data: string}>) {
       const API_URL2 = process.env.API_URL
       const url = `${API_URL2}/sub-bucket/list?user_id=${user.id}`;
       console.log(url)
-      const token = ""
+      
       setLoading(true)
       const listData = await fetchWrapper.get(url,token);
       
-        console.log(listData)
+          if(listData.data.length == 0){
+            setDataCount(true)
+          }
        
           setData(listData);
       
@@ -129,6 +131,11 @@ function BucketList({sheetId, payload}: SheetProps<{data: string}>) {
                           )
 
                   })}
+
+                  {dataCount &&
+
+                      <Text>No Subbucket assigned to you</Text>
+                  }
                    
                </View>
 
