@@ -18,9 +18,11 @@ function Dashboard() {
     const netInfo = useNetInfo()
 
   useEffect(() => {
-    console.log('net info changed, new state: ', netInfo)
+    //console.log('net info changed, new state: ', netInfo)
      
   }, [netInfo])
+
+
 
     const navigation = useNavigation();
       const [networkState, setNetworkState] = useState(null);
@@ -46,6 +48,7 @@ function Dashboard() {
   const toDay = `${year}${separator}${month<10?`0${month}`:`${month}`}${separator}${date<10?`0${date}`:`${date}`}`
  
 
+
   if(toDay != attendanceData?.date){
      
      storage.delete('attendance')
@@ -53,7 +56,7 @@ function Dashboard() {
   }
      let user  = storage.getString('user') ? JSON.parse(storage.getString('user')) : [];
 
-     
+    
     let breakData  = storage.getString('break') ? JSON.parse(storage.getString('break')) : null;
 
     useEffect(() => {
@@ -347,8 +350,12 @@ function Dashboard() {
                             <Box screenname={"Customers"} imageSource={require('../../theme/assets/images/defaulters.png')} text="Customers" />
                             <Box screenname={"Announcements"} imageSource={require('../../theme/assets/images/announcement.png')} text="Announcements" />
                             <Box screenname={"Progress"} imageSource={require('../../theme/assets/images/progress.jpg')} text="Progress" />
+                            {user.role != 'field-agent' &&
+                            <>
                             <Box screenname={"ReviewForm"} imageSource={require('../../theme/assets/images/form.png')} text="Review Forms" />
                             <Box screenname={"DownloadReport"} imageSource={require('../../theme/assets/images/review.png')} text="Download Reports" />
+                            </>
+                            }
                             <Box screenname={"AccountSetting"} imageSource={require('../../theme/assets/images/attendance.png')} text="Account Setting" />
                             <Box screenname={"Profile"} imageSource={require('../../theme/assets/images/pers.png')} text="Profile" />
                             </>

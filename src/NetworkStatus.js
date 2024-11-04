@@ -45,7 +45,7 @@ const NetworkStatus = () => {
 
   // Return a view with a text and a color indicator
   return (
-    <View style={{height:20}} >
+    <View style={{height:20,backgroundColor:'black'}} >
       <Text style={{color:networkState?.isInternetReachable ? 'green' : 'white',
 
       fontSize: 12,

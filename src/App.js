@@ -2,7 +2,7 @@ import { StyleSheet, Text, View,  PermissionsAndroid,Platform ,Button, Alert, Sa
 import React, {useEffect,useRef,useState } from 'react';
 import Geolocation from 'react-native-geolocation-service';
 import ReactNativeForegroundService from "@supersami/rn-foreground-service";
-import NetInfo from "@react-native-community/netinfo";
+
 import 'react-native-gesture-handler';
 import { ThemeProvider } from '@/theme';
 import ApplicationNavigator from './navigators/Application';
@@ -13,23 +13,41 @@ import { MMKV } from 'react-native-mmkv'
 import SystemSetting from 'react-native-system-setting'
 import {SheetProvider} from 'react-native-actions-sheet';
 import './sheet/SheetList';
+import { useNetInfo } from '@react-native-community/netinfo';
 const App = () => {
   const watchIdRef = useRef(null);
   const [locationEnabledVal, setLocationEntableVAl] = useState(true);
   const [airEnabledVal, setAirEntableVal] = useState(false);
+ 
+
   const API_URL2 = process.env.API_URL
    const storage = new MMKV({
       id: `izak-10`,
       
     })
-   let user  = storage.getString('user') ? JSON.parse(storage.getString('user')) : [];
-    const [locationVal, setLocationVal] = useState({});
-  if (Platform.OS === 'android') {
-    // Use PermissionsAndroid here
-  }
+let user  = storage.getString('user') ? JSON.parse(storage.getString('user')) : [];
+const [locationVal, setLocationVal] = useState({});
+
+       const netInfo = useNetInfo()
+      
+
+  useEffect(() => {
+
+   
+      
+
+       //console.log('net info changed, new state: ', netInfo)
+     
+  }, [netInfo])
 
 
+   
 useEffect(() => {
+
+   
+ 
+
+   
     const locationListener = SystemSetting.addLocationListener(
       (locationEnabled) => {
           
@@ -44,7 +62,7 @@ useEffect(() => {
 useEffect(() => {
     const airPlaneListener = SystemSetting.addAirplaneListener(
       (airEnable) => {
-          console.log(airEnable)
+          
           setAirEntableVal(airEnable)
           
       },
@@ -52,6 +70,9 @@ useEffect(() => {
 
     return () => SystemSetting.removeListener(airPlaneListener);
   }, []);
+
+
+
 
   useEffect(() => {
 
@@ -122,7 +143,7 @@ const sendSos = async(location) => {
             Linking.openSettings();
             const { code, message } = error;
            
-            console.log(code, message);
+            //console.log(code, message);
         })
 
  
@@ -221,13 +242,14 @@ const sendSos = async(location) => {
        
         if(userA?.id){
             const locVal = {latitude:position.coords.latitude,longitude:position.coords.longitude}
+           
             sendLoaction(locVal,userA.id);
         }
-        console.log(Platform.OS,"App Position tracking",coordinates)
+        //console.log(Platform.OS,"App Position tracking",coordinates)
       },
       error => {
         Linking.openSettings();
-        console.log('maperror in getting location', error.code, error.message);
+       // console.log('maperror in getting location', error.code, error.message);
 
       },
 
@@ -236,17 +258,27 @@ const sendSos = async(location) => {
     );
   };
   const sendLoaction = async (location,user_id) => {
-  const url = `${API_URL2}/user/location`;
-  
-             const token = ""
-             const postData = {
-              user_id:user_id,
-              location:location,
-              event_id:0,
-             }
+
+    
+    
+
+
+             const url = `${API_URL2}/user/location`;
+        
+                   const token = ""
+                   const postData = {
+                    user_id:user_id,
+                    location:location,
+                    event_id:0,
+                   }
             
               
-              const listData = await fetchWrapper.post(url,token,postData);
+         
+
+        const listData = await fetchWrapper.post(url,token,postData);
+
+    
+ 
             
                
                

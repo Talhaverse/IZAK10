@@ -40,12 +40,14 @@ function BucketList({sheetId, payload}: SheetProps<{data: string}>) {
       
       const API_URL2 = process.env.API_URL
       const url = `${API_URL2}/sub-bucket/list?user_id=${user.id}`;
-      console.log(url)
+     
       
       setLoading(true)
+      const token = {}
       const listData = await fetchWrapper.get(url,token);
-      
+         console.log(listData.data.length)
           if(listData.data.length == 0){
+
             setDataCount(true)
           }
        
@@ -134,7 +136,7 @@ function BucketList({sheetId, payload}: SheetProps<{data: string}>) {
 
                   {dataCount &&
 
-                      <Text>No Subbucket assigned to you</Text>
+                      <Text style={{color:'red',fontWeight:'bold',fontSize:14}}>No Subbucket assigned to you</Text>
                   }
                    
                </View>

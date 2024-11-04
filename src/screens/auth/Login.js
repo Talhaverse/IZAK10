@@ -86,7 +86,7 @@ const Login = ({route,navigation}) => {
                 const data  = await fetchWrapper.post(url,token,postData).then(async userData => {
                     setLoading(false)
 
-
+                    userData.user.role = userData.role;
                     if(userData.success){
                         storage.set('user', JSON.stringify(userData.user))
                       navigation.navigate("Dashboard")

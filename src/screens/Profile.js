@@ -20,7 +20,7 @@ const Profile = ({navigation,route}) => {
     })
   let user  = storage.getString('user') ? JSON.parse(storage.getString('user')) : [];
 
-
+  console.log(user)
   const CardPrint = ({label,value}) => {
 
       return (
@@ -146,7 +146,7 @@ const Profile = ({navigation,route}) => {
                 </View>
 
                 <View>
-                  <Text style={{fontSize: 14,fontWeight: 800,color: '#000',fontFamily:'Poppins-Regular'}}>User Role</Text>
+                  <Text style={{fontSize: 14,fontWeight: 800,color: '#000',fontFamily:'Poppins-Regular'}}>Role</Text>
                   <Text style={{fontSize: 14,fontWeight: 400,color: '#000',fontFamily:'Poppins-Regular'}}>Field Agent</Text>
                 </View>
               </View>

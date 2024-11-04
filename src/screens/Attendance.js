@@ -1,5 +1,5 @@
 import React,{useState,useEffect} from 'react'
-import { View, Text,TouchableOpacity,ActivityIndicator,StyleSheet } from 'react-native'
+import { View, Text,TouchableOpacity,ActivityIndicator,StyleSheet,Linking } from 'react-native'
 import { MMKV } from 'react-native-mmkv'
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import CameraRoll from '../components/camera/CameraRoll';
@@ -23,6 +23,7 @@ const Attendance = ({navigation}) => {
   let year = newDate.getFullYear();
   const separator='-'
   const toDay = `${year}${separator}${month<10?`0${month}`:`${month}`}${separator}${date<10?`0${date}`:`${date}`}`
+ 
  
 
   if(toDay != attendanceData?.date){
@@ -65,6 +66,7 @@ const Attendance = ({navigation}) => {
   const saveImage = (data) => {
 
 setLoading(true)
+
     GetLocation.getCurrentPosition({
           enableHighAccuracy: true,
           timeout: 60000,
@@ -78,7 +80,7 @@ setLoading(true)
             
           const dateStr = new Date();
           const locationData  = {latitude:location.latitude,longitude:location.longitude,datetime:dateStr}
-            
+           
             
 
 
@@ -138,7 +140,7 @@ setLoading(true)
 
             });
 
-             setLoading(false);
+             //setLoading(false);
               
         })
         .catch(error => {
@@ -188,7 +190,7 @@ setLoading(true)
           console.log(postData)
         const listData = await fetchWrapper.post(url,token,postData);
         storage.delete('user');
-        storage.delete('attendance');
+        //storage.delete('attendance');
         setLoading(false)
         navigation.navigate('Login');
             
@@ -222,7 +224,7 @@ setLoading(true)
       >Instructions:</Text>
 
 
-
+     
 
       {!attendanceData && 
       <TouchableOpacity
