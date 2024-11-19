@@ -79,7 +79,7 @@ const netInfo = useNetInfo()
      if(netInfo?.isInternetReachable){
         sendData();
      }
-  }, [netInfo])
+  }, [netInfo,refreshing])
 
     useEffect(() => {
       
@@ -593,10 +593,13 @@ const renderFooter = () => {
     }
    
   };
+  const changeStatus = () => {
+        setRefreshing(refreshing => !refreshing);
+    }
 
 const meChange = (value,type) => {
     setChannelTitle(value.label);
-  
+  changeStatus();
     setStatusValue(value.value)
     
     setPage(0)

@@ -10,9 +10,10 @@ import GetLocation from 'react-native-get-location'
 import  moment from 'moment'
 // import axios  from 'axios';
 // import fs from 'fs';
+import NetInfo from "@react-native-community/netinfo";
 const CustomerForm = ({data,navigation,type,mode}) => {
   const [outComeList, setOutComeList] = useState([]);
-
+const [networkState, setNetworkState] = useState(null);
    const [imageVal, setImageVal] = useState([]);
    const [locationVal, setLocationVal] = useState([]);
   const [contactList, setContactList] = useState([]);
@@ -44,6 +45,22 @@ const CustomerForm = ({data,navigation,type,mode}) => {
         
         
     }, []);
+  useEffect(() => {
+    // Get the network state once
+    NetInfo.fetch().then(state => {
+      setNetworkState(state);
+    });
+
+    // Subscribe to network state updates
+    const unsubscribe = NetInfo.addEventListener(state => {
+      setNetworkState(state);
+    });
+
+    // Unsubscribe from network state updates
+    return () => {
+      unsubscribe();
+    };
+  }, []);
 
   const loadOutCome = async (type="text") => {
 
@@ -201,7 +218,7 @@ const CustomerForm = ({data,navigation,type,mode}) => {
             };
 
             console.log(formdata)
-            if(mode){
+            if(mode &&   networkState?.isInternetReachable){
                 const url = `${API_URL2}/customer/save-form`;
            
               fetch(`${url}`, requestOptions)
@@ -225,7 +242,7 @@ const CustomerForm = ({data,navigation,type,mode}) => {
 
               })
               .catch(error => {
-                console.log(API_URL2)
+                console.log(error)
                   setLoading(false)
               });
 
@@ -293,7 +310,7 @@ const CustomerForm = ({data,navigation,type,mode}) => {
         }
 		<View style={{marginTop:10}}>
 			<Text style={{color:'#008B8B',fontWeight:'bold',fontSize:18}}>
-      {JSON.stringify(mode)}
+      
       Form: {data.form.name}</Text>
 
 			
@@ -442,11 +459,11 @@ const CustomerForm = ({data,navigation,type,mode}) => {
           <Text style={styles.buttonText}>Take Photo</Text>
         </TouchableOpacity>
       </View>
-        {mode ?
-				 <Button  title="Submit" onPress={handleSubmit(onSubmit)} />
-         :
-         <Button  title="Submit Offline" onPress={handleSubmit(onSubmit)} />
-        }
+        {mode && networkState?.isInternetReachable ? (
+            <Button title="Submit" onPress={handleSubmit(onSubmit)} />
+          ) : (
+            <Button title="Submit Offline" onPress={handleSubmit(onSubmit)} />
+          )}
 		</View>
 		</>
 	)
