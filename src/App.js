@@ -300,9 +300,7 @@ const sendSos = async(location) => {
         style={{backgroundColor:'white',height:'100%',flex:1,justifyContent:'center'}}
        >
 
-        <Text style={{color:'black',textAlign:'center',fontWeight:'bold'}}>Please enable you location and disable Airplane
-       
-        </Text>
+        <Text style={{color:'black',textAlign:'center',fontWeight:'bold'}}>Please enable your location</Text>
         </View>
 
       }
