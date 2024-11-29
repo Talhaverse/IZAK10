@@ -19,6 +19,8 @@ const App = () => {
   const [locationEnabledVal, setLocationEntableVAl] = useState(true);
   const [airEnabledVal, setAirEntableVal] = useState(false);
  
+ const [locationStatusChecked, setLocationStatusChecked] = useState(false);
+ const [airplaneStatusChecked, setAirplaneStatusChecked] = useState(false);
 
   const API_URL2 = process.env.API_URL
    const storage = new MMKV({
@@ -101,6 +103,54 @@ useEffect(() => {
       };
 
   }, []);
+
+  // Listen for airplane mode status change
+  useEffect(() => {
+    const airPlaneListener = SystemSetting.addAirplaneListener((airEnable) => {
+      setAirEntableVal(airEnable);
+    });
+
+    return () => SystemSetting.removeListener(airPlaneListener);
+  }, []);
+
+  // Check location status on app load
+  useEffect(() => {
+    if (!locationStatusChecked) {
+      checkLocationStatus();
+    }
+
+    return () => {
+      setLocationStatusChecked(true); // Ensure we only check the location status once on app load
+    };
+  }, [locationStatusChecked]);
+
+  // Check if location is enabled on app start
+  const checkLocationStatus = () => {
+    SystemSetting.isLocationEnabled().then((enabled) => {
+      console.log(enabled)
+      setLocationEntableVAl(enabled);
+    });
+  };
+
+
+   // Check Airpalne status on app load
+  useEffect(() => {
+    if (!airplaneStatusChecked) {
+      checkAirpalneStatus();
+    }
+
+    return () => {
+      setAirplaneStatusChecked(true); // Ensure we only check the Aipalne status once on app load
+    };
+  }, [airplaneStatusChecked]);
+
+  // Check if Aipalne is enabled on app start
+  const checkAirpalneStatus = () => {
+    SystemSetting.isAirplaneEnabled().then((enabled) => {
+      console.log(enabled)
+      setAirEntableVal(enabled);
+    });
+  };
 
  
 const sendSos = async(location) => {
@@ -300,7 +350,7 @@ const sendSos = async(location) => {
         style={{backgroundColor:'white',height:'100%',flex:1,justifyContent:'center'}}
        >
 
-        <Text style={{color:'black',textAlign:'center',fontWeight:'bold'}}>Please enable your location</Text>
+        <Text style={{color:'black',textAlign:'center',fontWeight:'bold'}}>Please {!airEnabledVal ? "enable" : "disable"} your {!airEnabledVal ? "Location" : "Airplane Mode"}</Text>
         </View>
 
       }

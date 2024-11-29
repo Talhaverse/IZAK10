@@ -122,7 +122,7 @@ const renderFooter = () => {
   return (
     <View style={{margin:0,backgroundColor:'#fff'}}>
      <View style={{margin:10}}>
-     <Text style={{color:'#008B8B',fontWeight:'bold',fontSize:22}}>Announcemnts</Text>
+     <Text style={{color:'#008B8B',fontWeight:'bold',fontSize:22}}>Announcements</Text>
     
      
 

@@ -71,7 +71,7 @@ const loadList = async() => {
             <View style={{flexDirection:'row'}}>
                 <View style={{width:'33%',backgroundColor:'#fff'}}>
                     
-                    <Text style={{color:'black',fontWeight:'bold',fontSize:18,textAlign:'center'}}>{Math.abs(data?.cases[0]?.pending) + Math.abs(data?.cases[0].complete)}</Text>
+                    <Text style={{color:'black',fontWeight:'bold',fontSize:18,textAlign:'center'}}>{Math.abs(data?.cases[0]?.pending || 0) + Math.abs(data?.cases[0]?.complete || 0)}</Text>
                 </View>
                 <View style={{width:'33%',backgroundColor:'#fff'}}>
                     
