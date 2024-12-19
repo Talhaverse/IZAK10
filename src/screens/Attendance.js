@@ -189,10 +189,12 @@ setLoading(true)
             
           console.log(postData)
         const listData = await fetchWrapper.post(url,token,postData);
-        storage.delete('user');
-        //storage.delete('attendance');
+        // storage.delete('user');
+        storage.delete('attendance');
         setLoading(false)
-        navigation.navigate('Login');
+        // navigation.navigate('Login');
+         navigation.navigate('Dashboard',{id:Math.random()})
+
             
               
         })

@@ -357,7 +357,7 @@ const [networkState, setNetworkState] = useState(null);
         name={item.key}
       />
   	}
-      {errors[item.label] && <Text style={{color:'red',fontWeight:'bold'}}>This is required.</Text>}
+      {errors[item.key] && <Text style={{color:'red',fontWeight:'bold'}}>This is required.</Text>}
 								
 							</View>	
 						)
