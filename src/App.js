@@ -14,7 +14,7 @@ import SystemSetting from 'react-native-system-setting'
 import {SheetProvider} from 'react-native-actions-sheet';
 import './sheet/SheetList';
 import { useNetInfo } from '@react-native-community/netinfo';
-const App = () => {
+const App = ({navigation}) => {
   const watchIdRef = useRef(null);
   const [locationEnabledVal, setLocationEntableVAl] = useState(true);
   const [airEnabledVal, setAirEntableVal] = useState(false);
@@ -326,8 +326,12 @@ const sendSos = async(location) => {
          
 
         const listData = await fetchWrapper.post(url,token,postData);
-
-    
+          console.log(listData)
+         if(!listData.success){
+             // storage.delete('customer');
+              storage.delete('user');
+                         navigation.navigate('Login');
+         }
  
             
                

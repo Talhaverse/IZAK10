@@ -1,6 +1,7 @@
-import React, {useRef,useState} from 'react';
+import React, {useRef,useState,useEffect} from 'react';
 import DropDownPicker from 'react-native-dropdown-picker';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
+
 import {
   View,Text,StyleSheet,Image,TouchableOpacity,ScrollView,TextInput
 } from 'react-native';
@@ -14,20 +15,45 @@ import ActionSheet, {
 function StatusList({sheetId, payload}: SheetProps<{data: string}>) {
   const actionSheetRef = useRef(null); 
 
+ 
+
+  let statusListData = [];
+          if(payload.netInfo?.isInternetReachable){
+              
+              statusListData = [
+          
+            
+                {label: 'In Process', value: 1,icon:'user-clock',color:'orange'},
+                
+                {label: 'Priority', value: 0,icon:'paper-plane',color:'blue'},
+                {label: 'Auto Allocation', value: 200,icon:'paper-plane',color:'brown'},
+                {label: 'Completed', value: 10,icon:'user-check',color:'green'},
+                
+                
+              ];
+          }else{
+
+              statusListData = [
+            
+              
+              {label: 'In Process', value: 1,icon:'user-clock',color:'orange'},
+              
+              {label: 'Priority', value: 0,icon:'paper-plane',color:'blue'},
+            
+              
+              
+            ];
+          }
+
+
+    
+
+
   const {meChange} = payload
 
   const [assignopen, setAssignOpen] = useState();
   const [assignvalue, setAssignValue] = useState('assigned');
-  const [assignItems, setAssignItems] = useState([
-  
-    
-    {label: 'In Process', value: 1,icon:'user-clock',color:'orange'},
-    {label: 'Completed', value: 10,icon:'user-check',color:'green'},
-    {label: 'Priority', value: 0,icon:'paper-plane',color:'blue'},
-    {label: 'Auto Allocation', value: 200,icon:'paper-plane',color:'brown'},
-    
-    
-  ]);
+  const [assignItems, setAssignItems] = useState(statusListData);
 
   
   return (

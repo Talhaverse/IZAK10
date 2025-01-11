@@ -1,5 +1,5 @@
 import React,{useState,useEffect} from 'react';
-import { View, Text,TouchableOpacity,ScrollView,StyleSheet,TextInput,Button, Alert,Image,ActivityIndicator  } from 'react-native'
+import { View, Text,TouchableOpacity,ScrollView,StyleSheet,TextInput,Button, Alert,Image,ActivityIndicator,Pressable  } from 'react-native'
 import { useForm, Controller } from "react-hook-form"
 import DropDown from './DropDown'
 import CameraRoll from '../../components/camera/CameraRoll';
@@ -7,6 +7,7 @@ import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import { fetchWrapper } from '../../components/helpers';
 import { MMKV } from 'react-native-mmkv'
 import GetLocation from 'react-native-get-location'
+import DatePicker from 'react-native-date-picker'
 import  moment from 'moment'
 // import axios  from 'axios';
 // import fs from 'fs';
@@ -18,15 +19,20 @@ const [networkState, setNetworkState] = useState(null);
    const [locationVal, setLocationVal] = useState([]);
   const [contactList, setContactList] = useState([]);
   const [loading,setLoading] = useState(false);
+  const [date, setDate] = useState(new Date())
+  const [openDate, setOpenDate] = useState(false)
    const API_URL2 = process.env.API_URL
 	 const {
     control,
     handleSubmit,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm({
     
   })
 
+  const watchFields = watch(["outcome_id","promise_amount","promise_date"])
   const dataCust = data;
 
   const storage = new MMKV({
@@ -153,8 +159,82 @@ const [networkState, setNetworkState] = useState(null);
         // saveData.ref_id = dataCust.id
         // saveData.contactData = contactList;
         // saveData.imageData = imageVal;
+       
+        const outcome_id = watchFields[0];
+        const promise_amount = watchFields[1];
+        const promise_date = watchFields[2];
+        console.log(getOutComeName(watchFields[0]))
+        if(getOutComeName(watchFields[0]) == "Promise To Pay"){
 
 
+              if(promise_amount == ""){
+                  alert(`"Promise amount required"`);
+                  return false;
+              }
+
+              if(promise_date == ""){
+                  alert("Promise date required");
+                  return false;
+              }
+
+              const mintAmount = getPromiseAmount();
+              const originalBal = dataCust.customer.balance
+              if((promise_amount < mintAmount || promise_amount > originalBal)){
+                  alert(`Amount (The amount must be more than ${dataCust?.customer?.bucket?.percentage}% of the available balance (${mintAmount} Rs) and not exceed the total balance of ${dataCust.customer.balance} Rs.)`)
+                  
+                  return false;
+              }
+              const startdate = new Date()
+              const promiseDay = dataCust?.customer?.bucket?.days;
+              var minDate = moment(startdate, "DD-MM-YYYY").add(promiseDay, 'days');
+
+              var day = minDate.format('DD');
+              var month = minDate.format('MM');
+              var year = minDate.format('YYYY');
+
+
+              var dateFormat = moment(date).format('YYYY/MM/DD');
+
+               var dateFormatMin = moment(minDate).format('YYYY/MM/DD');
+
+              console.log(dateFormat)
+              console.log(dateFormatMin)
+              if(dateFormat > dateFormatMin){
+                  alert(`Promise Date (The promise date cannot be more than ${dataCust?.customer?.bucket?.days} days from today or in the past.)`);
+                  return false;
+              }
+
+              //alert(day + '.' + month + '.' + year + " -- " + dayP + '.' + monthP + '.' + yearP );
+
+              
+             
+
+        }
+        
+        if(getOutComeName(watchFields[0]) == "Follow up"){
+
+          delete data['promise_date']; 
+          delete data['promise_amount']; 
+           delete data['payment_date']; 
+          delete data['payment_amount']; 
+        }
+
+        if(getOutComeName(watchFields[0]) == "Promise To Pay"){
+          delete data['followup_date'];
+          delete data['payment_date']; 
+          delete data['payment_amount']; 
+
+        }
+
+
+        if(getOutComeName(watchFields[0]) == "Payment"){
+          delete data['promise_date']; 
+          delete data['promise_amount']; 
+           delete data['followup_date']; 
+          
+        }
+       
+      
         setLoading(true)
          var myHeaders = new Headers();
             myHeaders.append("Content-Type", "multipart/form-data");
@@ -299,6 +379,31 @@ const [networkState, setNetworkState] = useState(null);
       setContactList(newInputs);
 };
 
+const getPromiseAmount = () => {
+
+    // $bucket_id = $model->customer->bucket_id;
+    // $originalBalance = $model->customer->balance;
+    // $discountPercentage = $model->customer->bucket->percentage;
+    // $discountAmount = ($originalBalance * $discountPercentage) / 100;
+    // $newBalance = $originalBalance - $discountAmount;
+    // $newBalance = round($newBalance);
+
+    const originalBal = data.customer.balance;
+    const discountPer = data?.customer?.bucket?.percentage
+    let discountAmount = 0;
+    if(discountPer){
+       discountAmount = (originalBal * discountPer) / 100;
+    }
+
+      const newBal = discountAmount;//originalBal - discountAmount;
+    return Math.round(newBal)
+}
+const getOutComeName = (id) => {
+
+   
+    const result = outComeList.find(item => item.value === id)
+    return result?.label;
+}
 
 	const formData = {"components": data.form.data.components};
 	return (
@@ -311,7 +416,9 @@ const [networkState, setNetworkState] = useState(null);
 		<View style={{marginTop:10}}>
 			<Text style={{color:'#008B8B',fontWeight:'bold',fontSize:18}}>
       
-      Form: {data.form.name}</Text>
+      Form: {data.form.name} {getPromiseAmount()} {data.customer.balance}
+       
+      </Text>
 
 			
       {errors.firstName && <Text>This is required.</Text>}
@@ -378,12 +485,256 @@ const [networkState, setNetworkState] = useState(null);
               render={({ field }) => (
                   <DropDown label={'Result'} field={field} item={outComeList} />
               )}
+
+              
               name="outcome_id"
            />
             {errors['outcome_id'] && <Text style={{color:'red',fontWeight:'bold'}}>This is required.</Text>}
       </View>
       }
 
+      
+
+
+      { getOutComeName(watchFields[0]) == "Follow up" &&
+          <>
+          
+              <View>
+
+              <Text style={{color:'#008B8B',fontWeight:'bold',fontSize:16}}>Follow Up Date</Text>
+
+
+              <DatePicker
+                      
+                      modal
+                     open={openDate}
+                      date={date}
+                      mode="date"
+                      minimumDate={new Date(Date.now())}
+                      onConfirm={(date) => {
+          setOpenDate(false)
+          setDate(date)
+
+          
+          
+          setValue("followup_date",moment(date).format('YYYY-MM-DD'))
+        }}
+        onCancel={() => {
+          setOpenDate(false)
+        }}
+
+
+                    />
+
+
+                    <Controller
+                  control={control}
+                  rules={{
+                    required: true,
+                  }}
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    
+                    <Pressable
+                      onPress={() => setOpenDate(true)}
+                    >
+                    <TextInput
+                      placeholder="Follow Up Date"
+                      onBlur={onBlur}
+                      onChangeText={onChange}
+                      value={value}
+                      editable={false}
+                      placeholderTextColor= '#008B8B'
+                       style={{backgroundColor:'#fff',borderColor:'#008B8B',borderRadius:6,height:40, borderWidth: 1,color: '#008B8B',textAlign: 'left',fontSize: 14,width: '100%',marginTop:0,marginBottom:10}}
+                    />
+                    </Pressable>
+                  )}
+                  name="followup_date"
+                />
+                {errors['followup_date'] && <Text style={{color:'red',fontWeight:'bold'}}>This is required.</Text>}
+                </View>
+
+                </>
+      }
+
+
+      { getOutComeName(watchFields[0]) == "Payment" &&
+          <>
+            <View>
+
+              <Text style={{color:'#008B8B',fontWeight:'bold',fontSize:16}}>Payment Amount</Text>
+                    <Controller
+                  control={control}
+                  rules={{
+                    required: true,
+
+
+                  }}
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <TextInput
+                      placeholder="Payment Amount"
+                      onBlur={onBlur}
+                      onChangeText={onChange}
+                      value={value}
+                      placeholderTextColor= '#008B8B'
+                       style={{backgroundColor:'#fff',borderColor:'#008B8B',borderRadius:6,height:40, borderWidth: 1,color: '#008B8B',textAlign: 'left',fontSize: 14,width: '100%',marginTop:0,marginBottom:10}}
+                    />
+                  )}
+                  name="payment_amount"
+                />
+
+                 {errors['payment_amount'] && <Text style={{color:'red',fontWeight:'bold'}}>This is required.</Text>}
+                </View>
+
+
+              <View>
+
+              <Text style={{color:'#008B8B',fontWeight:'bold',fontSize:16}}>Payment Date</Text>
+
+
+              <DatePicker
+                      
+                      modal
+                     open={openDate}
+                      date={date}
+                      mode="date"
+                      maximumDate={new Date(Date.now())}
+                      onConfirm={(date) => {
+          setOpenDate(false)
+          setDate(date)
+          
+          setValue("promise_date",moment(date).format('YYYY-MM-DD'))
+        }}
+        onCancel={() => {
+          setOpenDate(false)
+        }}
+
+
+                    />
+
+
+                    <Controller
+                  control={control}
+                  rules={{
+                    required: true,
+                  }}
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    
+                    <Pressable
+                      onPress={() => setOpenDate(true)}
+                    >
+                    <TextInput
+                      placeholder="Payment Date"
+                      onBlur={onBlur}
+                      onChangeText={onChange}
+                      value={value}
+                      editable={false}
+                      placeholderTextColor= '#008B8B'
+                       style={{backgroundColor:'#fff',borderColor:'#008B8B',borderRadius:6,height:40, borderWidth: 1,color: '#008B8B',textAlign: 'left',fontSize: 14,width: '100%',marginTop:0,marginBottom:10}}
+                    />
+                    </Pressable>
+
+
+                  )}
+                  name="payment_date"
+                />
+
+                {errors['payment_date'] && <Text style={{color:'red',fontWeight:'bold'}}>This is required.</Text>}
+                </View>
+
+                </>
+      }
+
+      { getOutComeName(watchFields[0]) == "Promise To Pay" &&
+          <>
+            <View>
+
+              <Text style={{color:'#008B8B',fontWeight:'bold',fontSize:16}}>Promise Amount</Text>
+
+              <Text style={{color:'black'}}>
+              Amount (The amount must be more than ${dataCust?.customer?.bucket?.percentage}% of the available balance ({getPromiseAmount()} Rs) and not exceed the total balance of {dataCust.customer.balance} Rs.)
+              </Text>
+                    <Controller
+                  control={control}
+                  rules={{
+                    required: true,
+
+
+                  }}
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <TextInput
+                      placeholder="Promise Amount"
+                      onBlur={onBlur}
+                      onChangeText={onChange}
+                      value={value}
+                      placeholderTextColor= '#008B8B'
+                       style={{backgroundColor:'#fff',borderColor:'#008B8B',borderRadius:6,height:40, borderWidth: 1,color: '#008B8B',textAlign: 'left',fontSize: 14,width: '100%',marginTop:0,marginBottom:10}}
+                    />
+                  )}
+                  name="promise_amount"
+                />
+
+                 {errors['promise_amount'] && <Text style={{color:'red',fontWeight:'bold'}}>This is required.</Text>}
+                </View>
+
+
+              <View>
+
+              <Text style={{color:'#008B8B',fontWeight:'bold',fontSize:16}}>Promise Date</Text>
+              <Text style={{color:'black'}}>
+              Promise Date (The promise date cannot be more than {dataCust?.customer?.bucket?.days} days from today or in the past.)
+              </Text>
+              <DatePicker
+                      
+                      modal
+                     open={openDate}
+                      date={date}
+                      mode="date"
+                      minimumDate={new Date(Date.now())}
+                      onConfirm={(date) => {
+          setOpenDate(false)
+          setDate(date)
+          
+          setValue("promise_date",moment(date).format('YYYY-MM-DD'))
+        }}
+        onCancel={() => {
+          setOpenDate(false)
+        }}
+
+
+                    />
+
+
+                    <Controller
+                  control={control}
+                  rules={{
+                    required: true,
+                  }}
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    
+                    <Pressable
+                      onPress={() => setOpenDate(true)}
+                    >
+                    <TextInput
+                      placeholder="Promise Date"
+                      onBlur={onBlur}
+                      onChangeText={onChange}
+                      value={value}
+                      editable={false}
+                      placeholderTextColor= '#008B8B'
+                       style={{backgroundColor:'#fff',borderColor:'#008B8B',borderRadius:6,height:40, borderWidth: 1,color: '#008B8B',textAlign: 'left',fontSize: 14,width: '100%',marginTop:0,marginBottom:10}}
+                    />
+                    </Pressable>
+
+
+                  )}
+                  name="promise_date"
+                />
+
+                {errors['promise_date'] && <Text style={{color:'red',fontWeight:'bold'}}>This is required.</Text>}
+                </View>
+
+                </>
+      }
       {data.form.contact == 1 &&
       <View
           style={{borderWidth:1,padding:10,borderRadius:6,margin:10,borderColor:'#008B8B'}}

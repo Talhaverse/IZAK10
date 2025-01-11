@@ -55,7 +55,7 @@ const NetworkStatus = () => {
     margin: 0
   }}>
      
-        {networkState?.isInternetReachable ? 'Online' : "Offline"}
+        {networkState?.isInternetReachable ? 'Online' : "Offline"}, Vesion 1.8
        
       </Text>
       

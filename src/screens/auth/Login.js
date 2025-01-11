@@ -86,12 +86,13 @@ const Login = ({route,navigation}) => {
                 const data  = await fetchWrapper.post(url,token,postData).then(async userData => {
                     setLoading(false)
 
-                    userData.user.role = userData.role;
+                   
                     if(userData.success){
+                       userData.user.role = userData?.role;
                         storage.set('user', JSON.stringify(userData.user))
                       navigation.navigate("Dashboard")
                     }else{
-                        alert("Invalid user");
+                        alert(userData.message);
                         return false;
                     }
                     
@@ -99,6 +100,7 @@ const Login = ({route,navigation}) => {
 
                 }).catch((err) => {
                     setLoading(false)
+                    console.log(err)
                     alert("Invalid User")
                 })
 

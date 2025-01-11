@@ -72,7 +72,9 @@ const Customers = ({navigation,route}) => {
   const [list, setList] = useState([]);
 
   
-const netInfo = useNetInfo()
+const netInfo = useNetInfo();
+
+//netInfo.isInternetReachable = false;
 
   useEffect(() => {
     console.log('net info changed, new state: ', netInfo)
@@ -133,7 +135,7 @@ const netInfo = useNetInfo()
       }, [route]);
 
       const sendData = async() => {
-          
+        
             setSyncStart(true);
            const API_URL2 = process.env.API_URL
            setLoading(true)
@@ -215,7 +217,7 @@ const netInfo = useNetInfo()
            storage.set('customer', JSON.stringify(customerStorageOffline));
            console.log("removed")
 
-           storage.delete('customer')
+           //storage.delete('customer')
            
            loadListRefresh(statusValue)
             setSyncStart(false);
@@ -388,17 +390,20 @@ const netInfo = useNetInfo()
     loadList(netInfo)
 }
   const meScroll = () => {
- 
-  if(!endPage){
-      loadNext()
-  }
+    if(netInfo?.isInternetReachable){
+         if(!endPage){
+               
+              loadNext()
+          }
+    }
+         
   
  
 }
 
  const loadListRefresh = async(status_id='') => {
       
-     console.log("refresh")
+     
       const searchParam = JSON.stringify(searchData)
       setEndPage(false)
       setList([])
@@ -406,47 +411,76 @@ const netInfo = useNetInfo()
       if(status_id != ''){
           statusDataValue = status_id;
       }
+
+
      
-      const API_URL2 = process.env.API_URL
-      const url = `${API_URL2}/customer/index?user_id=${user.id}&expand=customer,form&type=${type}&page=0&param=${searchParam}&expand=customer,form&status=${statusDataValue}`;
-     
-      const token = ""
-      setLoading(true)
-      const listData = await fetchWrapper.get(url,token);
+     if(netInfo?.isInternetReachable){
+              const API_URL2 = process.env.API_URL
+              const url = `${API_URL2}/customer/index?user_id=${user.id}&expand=customer,form,customer.bucket&type=${type}&page=0&param=${searchParam}&status=${statusDataValue}`;
+             
+              const token = ""
+              setLoading(true)
+              const listData = await fetchWrapper.get(url,token);
 
-      setLoading(false)
-
-      listData.list.map(item => {
-
-            const checkData = customer.filter(rss => rss.id == item.id);
-
-              if(checkData.length == 0){
-
-                
-                  customer.push(item);
-                  storage.set('customer', JSON.stringify(customer));
-              
-              
-
+              if(listData.success === false){
+                    
+                    storage.delete('user');
+                                 navigation.navigate('Login');
+                    return false;
               }
-      })
-      storage.set('customer-total', listData.total_count);
-      setTotal(listData.count)
-      setTotalCustomer(listData.total_count)
-       
-          setList(listData.list);
-      
-       
-      if(listData.list.length > 0){
+              setLoading(false)
+               console.log(customer.length)
+              listData.list.map(item => {
 
-          const pageVal = page + 1;
-               setPage(pageVal)
-               setEndPage(false)
-      }else{
-            setEndPage(true)
-      }
+                    const checkData = customer.filter(rss => rss.id == item.id);
+                    console.log(checkData.length)
+                      if(checkData.length == 0){
+
+                            
+                          customer.push(item);
+                          storage.set('customer', JSON.stringify(customer));
+                      
+                      
+
+                      }
+              })
+              
+              console.log(customer.length)
+              storage.set('customer-total', listData.total_count);
 
 
+              setTotal(listData.count)
+              setTotalCustomer(listData.total_count)
+               
+                  setList(listData.list);
+              
+               
+              if(listData.list.length > 0){
+
+                  const pageVal = page + 1;
+                       setPage(pageVal)
+                       setEndPage(false)
+              }else{
+                    setEndPage(true)
+              }
+
+        }else{
+
+            
+                let priority_id = 0;
+                if(status_id === 0){
+                    priority_id = 1;
+                }
+                
+                let customerStorageRef  = storage.getString('customer') ? JSON.parse(storage.getString('customer')) : [];
+            
+                 const filterData = customerStorageRef.filter((item) => item.priority_id == priority_id)
+                 //console.log(customerStorageRef.length + " Storage Count ddd" + " " + status_id + " " + priority_id)
+                 setList(filterData);
+                 
+                 setTotalCustomer(filterData.length)
+
+        }
        
       
       
@@ -462,7 +496,7 @@ const netInfo = useNetInfo()
      if(netInfo?.isInternetReachable){
       
       const API_URL2 = process.env.API_URL
-      const url = `${API_URL2}/customer/index?user_id=${user.id}&expand=customer,user,form,submission,outcome&type=${type}&page=${page}&param=${searchParam}&status=${statusValue}`;
+      const url = `${API_URL2}/customer/index?user_id=${user.id}&expand=customer,user,form,submission,outcome,customer.bucket&type=${type}&page=${page}&param=${searchParam}&status=${statusValue}`;
       console.log(url)
       const token = ""
       setLoading(true)
@@ -507,12 +541,20 @@ const netInfo = useNetInfo()
       
     }else{
         //storage.delete('customer')
+
+        let priority_id = 0;
+                if(statusValue == 0){
+                    priority_id = 1;
+                }
      
         let customerStorage  = storage.getString('customer') ? JSON.parse(storage.getString('customer')) : [];
         
-        
-         setList(customerStorage);
-         setTotalCustomer(storage.getString('customer-total'))
+         const filterData = customerStorage.filter((item) => item.priority_id == priority_id)
+         
+         setList(filterData);
+         console.log(filterData.length)
+         setTotalCustomer(filterData.length)
+         //setTotalCustomer(storage.getString('customer-total'))
     }
 
   }
@@ -599,9 +641,9 @@ const renderFooter = () => {
 
 const meChange = (value,type) => {
     setChannelTitle(value.label);
-  changeStatus();
+    changeStatus();
     setStatusValue(value.value)
-    
+ 
     setPage(0)
     if(value.value != 200){
         loadListRefresh(value.value);
@@ -640,7 +682,7 @@ const meChangeDate = () => {
 
                   <TouchableOpacity style={{width:'100%',backgroundColor: '#008B8B',borderRadius: 5,paddingHorizontal: 8,paddingVertical: 5,marginRight: 10,justifyContent:'flex-end',alignItems:'end'}}
 
-            onPress={() => SheetManager.show('work-status-list',{payload:{meChange:meChange}})}
+            onPress={() => SheetManager.show('work-status-list',{payload:{meChange:meChange,netInfo:netInfo}})}
           >
             <View style={{display: 'flex',flexDirection: 'row',alignItems: 'center'}}>
               <Text style={{width:'85%',fontSize: 14,fontWeight: 400,color: '#fff',marginRight: 5,fontFamily:'Poppins-Regular'}}>{channelTitle}</Text>
@@ -729,7 +771,7 @@ const meChangeDate = () => {
        </View>
         </>
         :
-          <Text style={{color:'black',fontWeight:'bold',fontSize:15}}>Total Customer Offline: {customer.length}</Text>
+          <Text style={{color:'black',fontWeight:'bold',fontSize:15}}>Total Customer Offline: {totalCustomer}</Text>
         }
         <Text
           style={{color:'#008B8B',fontSize:14,fontWeight:'bold'}}

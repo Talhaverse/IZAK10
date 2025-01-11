@@ -121,14 +121,19 @@ setLoading(true)
              // redirect: 'follow'
             };
             const url = `${API_URL2}/attendance/save-attendance-in`;
-           
+           console.log(url)
             fetch(`${url}`, requestOptions)
             .then(response => response.json())
             .then(result => {
                
-               
-               storage.set('attendance', JSON.stringify(result))
-               navigation.navigate('Dashboard',{id:Math.random()})
+                console.log(result)
+                if(result.success){
+                        storage.set('attendance', JSON.stringify(result))
+                      navigation.navigate('Dashboard',{id:Math.random()})
+                }else{
+                   alert(result.message)
+                }
+           
                setLoading(false)
 
 

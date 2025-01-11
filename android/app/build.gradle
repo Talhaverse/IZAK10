@@ -80,8 +80,8 @@ android {
         applicationId "com.izak10"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 6
-        versionName "1.5"
+        versionCode 8
+        versionName "1.7"
     }
     signingConfigs {
         debug {
